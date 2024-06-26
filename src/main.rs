@@ -1,6 +1,8 @@
 // #[path = "instruction/nop.rs"]
 #[path = "instruction/add.rs"]
 mod add;
+
+mod memory;
 // mod nop;
 
 fn main() {
