@@ -25,7 +25,6 @@ fn get_instruction_from_address(hexdump: &bin_file::BinFile, address: usize) -> 
     let a = hexdump.get_value_by_address(offset).unwrap() as u16;
     let b = hexdump.get_value_by_address(offset + 1).unwrap() as u16;
 
-    log::debug!("opcode: {:#06x}", (b << 8 | a));
     (b << 8 | a) as u16
 }
 
@@ -62,7 +61,6 @@ fn main() {
         file_path = opt.file_name;
     }
 
-    log::error!("{}", file_path.display());
     let hex_dump = bin_file::BinFile::from_file(Path::new(&file_path)).unwrap();
 
     let mut registers = Registers::new();
