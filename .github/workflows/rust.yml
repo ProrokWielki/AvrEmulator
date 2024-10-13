@@ -19,7 +19,7 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v3
     - name: Show me what you got
-      run: ls ${{ github.workspace }}
+      run: ls -al ${{ github.workspace }}
     - name: Build docker images
       run: docker build -t local ${{ github.workspace }}/.devcontainer/Dockerfile
     - name: Run tests
