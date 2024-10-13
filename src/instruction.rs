@@ -1,6 +1,7 @@
 use crate::registers::Registers;
 
 mod eor;
+mod i_in;
 mod nop;
 mod push;
 mod ret;
@@ -52,6 +53,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if eor::EOR::eq(opcode) {
         return Some(Box::new(eor::EOR::new(opcode)));
+    }
+    if i_in::IN::eq(opcode) {
+        return Some(Box::new(i_in::IN::new(opcode)));
     }
     None
 }
@@ -137,5 +141,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_eor_for_eor_opcode() {
         assert_eq!(get_instruction(0x2443).unwrap().str(), "eor r4, r3");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_in_for_in_opcode() {
+        assert_eq!(get_instruction(0xb000).unwrap().str(), "in r0, 0");
     }
 }
