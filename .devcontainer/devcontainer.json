@@ -7,7 +7,9 @@
             "extensions": [
                 "rust-lang.rust-analyzer",
                 "ms-vscode.cpptools",
-                "ms-vscode.cpptools-extension-pack"
+                "ms-vscode.cpptools-extension-pack",
+                "streetsidesoftware.code-spell-checker",
+                "ms-python.python"
             ]
         }
     }
