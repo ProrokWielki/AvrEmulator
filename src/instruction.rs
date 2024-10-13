@@ -1,5 +1,7 @@
 use crate::registers::Registers;
 
+mod nop;
+
 pub trait Instruction {
     fn process(&self, registers: &mut Registers) -> ();
     fn str(&self) -> String;
@@ -21,5 +23,56 @@ pub trait Instruction {
             }
         }
         false
+    }
+}
+
+pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
+    if nop::NOP::eq(opcode) {
+        return Some(Box::new(nop::NOP::new(opcode)));
+    }
+    None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct MockInstruction {}
+
+    impl Instruction for MockInstruction {
+        fn process(&self, regisetrs: &mut Registers) {}
+        fn str(&self) -> String {
+            return "mock".to_owned();
+        }
+        fn get_instruction_codes() -> Vec<u16> {
+            vec![0xf0f0]
+        }
+        fn get_instruction_mask() -> u16 {
+            0xfff0
+        }
+    }
+
+    #[test]
+    fn test_eq_returns_true_for_valid_instraction() {
+        assert!(MockInstruction::eq(0xf0f0));
+        assert!(MockInstruction::eq(0xf0ff));
+    }
+
+    #[test]
+    fn test_eq_returns_false_for_invalid_instraction() {
+        assert!(!MockInstruction::eq(0x0000));
+        assert!(!MockInstruction::eq(0xf000));
+        assert!(!MockInstruction::eq(0x00f0));
+        assert!(!MockInstruction::eq(0xe0e0));
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_none_for_invalid_opcode() {
+        assert!(get_instruction(0xffff).is_none());
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_nop_for_nop_opcode() {
+        assert_eq!(get_instruction(0x0000).unwrap().str(), "nop");
     }
 }
