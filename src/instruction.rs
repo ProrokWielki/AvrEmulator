@@ -70,6 +70,8 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     if rcall::RCALL::eq(opcode) {
         return Some(Box::new(rcall::RCALL::new(opcode)));
     }
+
+    log::error!("unknown opcode: {:#06x}", opcode);
     None
 }
 
