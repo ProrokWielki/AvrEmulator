@@ -6,6 +6,7 @@ mod ldi;
 mod nop;
 mod out;
 mod push;
+mod rcall;
 mod ret;
 mod rjmp;
 
@@ -65,6 +66,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if ldi::LDI::eq(opcode) {
         return Some(Box::new(ldi::LDI::new(opcode)));
+    }
+    if rcall::RCALL::eq(opcode) {
+        return Some(Box::new(rcall::RCALL::new(opcode)));
     }
     None
 }
@@ -165,5 +169,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_ldi_for_ldi_opcode() {
         assert_eq!(get_instruction(0xefff).unwrap().str(), "ldi r31, 255");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_rcall_for_rcall_opcode() {
+        assert_eq!(get_instruction(0xdfff).unwrap().str(), "rcall -1");
     }
 }
