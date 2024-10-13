@@ -2,6 +2,7 @@ use crate::registers::Registers;
 
 mod eor;
 mod i_in;
+mod i_std_y;
 mod ldi;
 mod nop;
 mod out;
@@ -69,6 +70,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if rcall::RCALL::eq(opcode) {
         return Some(Box::new(rcall::RCALL::new(opcode)));
+    }
+    if i_std_y::STDY::eq(opcode) {
+        return Some(Box::new(i_std_y::STDY::new(opcode)));
     }
 
     log::error!("unknown opcode: {:#06x}", opcode);
@@ -176,5 +180,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_rcall_for_rcall_opcode() {
         assert_eq!(get_instruction(0xdfff).unwrap().str(), "rcall -1");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_std_for_std_opcode() {
+        assert_eq!(get_instruction(0x8a08).unwrap().str(), "std y+16, r0");
     }
 }
