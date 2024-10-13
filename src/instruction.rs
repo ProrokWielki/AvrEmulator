@@ -2,10 +2,13 @@ use crate::registers::Registers;
 
 mod eor;
 mod i_in;
+mod ldi;
 mod nop;
+mod out;
 mod push;
 mod ret;
 mod rjmp;
+
 pub trait Instruction {
     fn process(&self, registers: &mut Registers) -> ();
     fn str(&self) -> String;
@@ -56,6 +59,12 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if i_in::IN::eq(opcode) {
         return Some(Box::new(i_in::IN::new(opcode)));
+    }
+    if out::OUT::eq(opcode) {
+        return Some(Box::new(out::OUT::new(opcode)));
+    }
+    if ldi::LDI::eq(opcode) {
+        return Some(Box::new(ldi::LDI::new(opcode)));
     }
     None
 }
@@ -146,5 +155,15 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_in_for_in_opcode() {
         assert_eq!(get_instruction(0xb000).unwrap().str(), "in r0, 0");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_out_for_out_opcode() {
+        assert_eq!(get_instruction(0xb800).unwrap().str(), "out 0, r0");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_ldi_for_ldi_opcode() {
+        assert_eq!(get_instruction(0xefff).unwrap().str(), "ldi r31, 255");
     }
 }
