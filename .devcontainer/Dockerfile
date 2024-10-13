@@ -17,6 +17,6 @@ RUN apk add      \
     gcc-avr==~14 \
     avr-libc==~2 \
     cmake==~3    \
-    git==~2
-
-
+    make==~4     \
+    git==~2      \
+    py3-pytest   \
