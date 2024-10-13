@@ -1,7 +1,7 @@
 use crate::registers::Registers;
 
 mod nop;
-
+mod ret;
 pub trait Instruction {
     fn process(&self, registers: &mut Registers) -> ();
     fn str(&self) -> String;
@@ -29,6 +29,9 @@ pub trait Instruction {
 pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     if nop::NOP::eq(opcode) {
         return Some(Box::new(nop::NOP::new(opcode)));
+    }
+    if ret::RET::eq(opcode) {
+        return Some(Box::new(ret::RET::new(opcode)));
     }
     None
 }
@@ -74,5 +77,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_nop_for_nop_opcode() {
         assert_eq!(get_instruction(0x0000).unwrap().str(), "nop");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_ret_for_ret_opcode() {
+        assert_eq!(get_instruction(0b1001_0101_0000_1000).unwrap().str(), "ret");
     }
 }
