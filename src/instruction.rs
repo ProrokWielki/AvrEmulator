@@ -1,5 +1,6 @@
 use crate::registers::Registers;
 
+mod eor;
 mod nop;
 mod push;
 mod ret;
@@ -48,6 +49,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if push::PUSH::eq(opcode) {
         return Some(Box::new(push::PUSH::new(opcode)));
+    }
+    if eor::EOR::eq(opcode) {
+        return Some(Box::new(eor::EOR::new(opcode)));
     }
     None
 }
@@ -128,5 +132,10 @@ mod tests {
                 .str(),
             format!("push r{}", pushed_value)
         );
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_eor_for_eor_opcode() {
+        assert_eq!(get_instruction(0x2443).unwrap().str(), "eor r4, r3");
     }
 }
