@@ -1,6 +1,7 @@
 use crate::registers::Registers;
 
 mod nop;
+mod push;
 mod ret;
 mod rjmp;
 pub trait Instruction {
@@ -44,6 +45,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if rjmp::RJMP::eq(opcode) {
         return Some(Box::new(rjmp::RJMP::new(opcode)));
+    }
+    if push::PUSH::eq(opcode) {
+        return Some(Box::new(push::PUSH::new(opcode)));
     }
     None
 }
@@ -113,5 +117,16 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_rjmp_for_rjmp_opcode() {
         assert_eq!(get_instruction(0xcfff).unwrap().str(), "rjmp -1");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_push_for_push_opcode() {
+        let pushed_value = 7;
+        assert_eq!(
+            get_instruction(push::PUSH::get_instruction_codes()[0] | pushed_value << 4)
+                .unwrap()
+                .str(),
+            format!("push r{}", pushed_value)
+        );
     }
 }
