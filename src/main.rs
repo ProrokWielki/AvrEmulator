@@ -55,8 +55,14 @@ fn main() {
         .init();
 
     let mut file_path = std::env::current_dir().unwrap();
-    file_path.push(opt.file_name);
 
+    if opt.file_name.is_relative() {
+        file_path.push(opt.file_name);
+    } else {
+        file_path = opt.file_name;
+    }
+
+    log::error!("{}", file_path.display());
     let hex_dump = bin_file::BinFile::from_file(Path::new(&file_path)).unwrap();
 
     let mut registers = Registers::new();
