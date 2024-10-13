@@ -3,6 +3,7 @@ use crate::registers::Registers;
 mod eor;
 mod i_in;
 mod i_std_y;
+mod ldd_y;
 mod ldi;
 mod nop;
 mod out;
@@ -73,6 +74,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if i_std_y::STDY::eq(opcode) {
         return Some(Box::new(i_std_y::STDY::new(opcode)));
+    }
+    if ldd_y::LDDY::eq(opcode) {
+        return Some(Box::new(ldd_y::LDDY::new(opcode)));
     }
 
     log::error!("unknown opcode: {:#06x}", opcode);
@@ -185,5 +189,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_std_for_std_opcode() {
         assert_eq!(get_instruction(0x8a08).unwrap().str(), "std y+16, r0");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_ldd_for_ldd_opcode() {
+        assert_eq!(get_instruction(0x8828).unwrap().str(), "ldd r2, y+16");
     }
 }
