@@ -18,4 +18,4 @@ RUN apk add      \
     cmake==~3    \
     make==~4     \
     git==~2      \
-    py3-pytest   
+    py3-pytest==~8   
