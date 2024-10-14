@@ -4,7 +4,6 @@ FROM alpine:3.20
 RUN apk update
 RUN apk add shadow
 
-
 # ZSH - becouse why not
 RUN apk add zsh==~5 zsh-vcs==~5
 RUN wget -O ~/.zshrc https://git.grml.org/f/grml-etc-core/etc/zsh/zshrc
@@ -19,4 +18,4 @@ RUN apk add      \
     cmake==~3    \
     make==~4     \
     git==~2      \
-    py3-pytest   \
+    py3-pytest   
