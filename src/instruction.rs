@@ -5,6 +5,7 @@ mod i_in;
 mod i_std_y;
 mod ldd_y;
 mod ldi;
+mod movw;
 mod nop;
 mod out;
 mod push;
@@ -77,6 +78,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if ldd_y::LDDY::eq(opcode) {
         return Some(Box::new(ldd_y::LDDY::new(opcode)));
+    }
+    if movw::MOVW::eq(opcode) {
+        return Some(Box::new(movw::MOVW::new(opcode)));
     }
 
     None
@@ -193,5 +197,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_ldd_for_ldd_opcode() {
         assert_eq!(get_instruction(0x8828).unwrap().str(), "ldd r2, y+16");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_movw_for_movw_opcode() {
+        assert_eq!(get_instruction(0x0112).unwrap().str(), "movw r2, r4");
     }
 }
