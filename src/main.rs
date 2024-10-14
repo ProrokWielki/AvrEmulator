@@ -29,10 +29,16 @@ fn get_instruction_from_address(hexdump: &bin_file::BinFile, address: usize) -> 
 }
 
 fn find_instruction_from_opcode(opcode: u16, registers: &mut registers::Registers) {
-    let instruction = instruction::get_instruction(opcode).unwrap();
-    log::info!("instruction: {}", instruction.str());
-
-    instruction.process(registers);
+    match instruction::get_instruction(opcode) {
+        None => {
+            log::error!("unknown opcode: {:#06x}", opcode);
+            std::process::exit(2);
+        }
+        Some(instruction) => {
+            log::info!("instruction: {}", instruction.str());
+            instruction.process(registers);
+        }
+    }
 }
 
 fn to_filter_level(verbose: u8) -> log::LevelFilter {

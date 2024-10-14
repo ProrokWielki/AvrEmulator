@@ -79,7 +79,6 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
         return Some(Box::new(ldd_y::LDDY::new(opcode)));
     }
 
-    log::error!("unknown opcode: {:#06x}", opcode);
     None
 }
 
