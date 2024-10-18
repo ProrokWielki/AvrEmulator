@@ -2,9 +2,11 @@ FROM alpine:3.20
 
 # System
 RUN apk update
-RUN apk add shadow
+RUN apk add     \
+    shadow      \
+    openssl-dev
 
-# ZSH - becouse why not
+# ZSH - because why not
 RUN apk add zsh==~5 zsh-vcs==~5
 RUN wget -O ~/.zshrc https://git.grml.org/f/grml-etc-core/etc/zsh/zshrc
 RUN chsh $USER -s /bin/zsh
@@ -18,4 +20,6 @@ RUN apk add      \
     cmake==~3    \
     make==~4     \
     git==~2      \
-    py3-pytest==~8   
+    py3-pytest==~8
+
+RUN cargo install cargo-tarpaulin
