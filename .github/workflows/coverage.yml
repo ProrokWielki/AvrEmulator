@@ -26,5 +26,4 @@ jobs:
     - name: Push to coveralls.io
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-    - name: Run tests
       run: docker run -v $PWD:/srv -w/srv local cargo tarpaulin --ciserver github-ci --coveralls $COVERALLS_REPO_TOKEN
