@@ -26,4 +26,4 @@ jobs:
     - name: Push to coveralls.io
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-      run: docker run -u 1001:1001 --security-opt seccomp=unconfined -v $PWD:/srv -w/srv local cargo tarpaulin --ciserver github-ci --coveralls $COVERALLS_REPO_TOKEN
+      run: docker run --security-opt seccomp=unconfined -v $PWD:/srv -w/srv local git config --global --add safe.directory /srv && cargo tarpaulin --ciserver github-ci --coveralls $COVERALLS_REPO_TOKEN
