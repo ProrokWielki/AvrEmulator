@@ -28,9 +28,9 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .devcontainer
-        push: true
-        tags: localhost:5000/prorokwielki/avr_emulator:latest
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        load: true
+        tags: prorokwielki/avr_emulator:latest
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache
     - name: build 
-      run: docker run -v $PWD:/srv -w/srv localhost:5000/prorokwielki/avr_emulator cargo build
+      run: docker run -v $PWD:/srv -w/srv prorokwielki/avr_emulator cargo build
