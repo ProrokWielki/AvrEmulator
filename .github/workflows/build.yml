@@ -24,10 +24,11 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .devcontainer
-        push: false #push: true
-        tags: local
+        push: false #push: true  
+        outputs: type=cacheonly
+        tags: prorokwielki/avr_emulator:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
     - name: Run tests
-      run: docker run -v $PWD:/srv -w/srv local cargo build
+      run: docker run -v $PWD:/srv -w/srv prorokwielki/avr_emulator cargo build
 
