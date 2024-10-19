@@ -12,6 +12,7 @@ mod push;
 mod rcall;
 mod ret;
 mod rjmp;
+mod subi;
 
 pub trait Instruction {
     fn process(&self, registers: &mut Registers) -> ();
@@ -81,6 +82,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if movw::MOVW::eq(opcode) {
         return Some(Box::new(movw::MOVW::new(opcode)));
+    }
+    if subi::SUBI::eq(opcode) {
+        return Some(Box::new(subi::SUBI::new(opcode)));
     }
 
     None
@@ -202,5 +206,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_movw_for_movw_opcode() {
         assert_eq!(get_instruction(0x0112).unwrap().str(), "movw r2, r4");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_subi_for_subi_opcode() {
+        assert_eq!(get_instruction(0x5032).unwrap().str(), "subi r19, 2");
     }
 }
