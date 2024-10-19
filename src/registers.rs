@@ -108,6 +108,18 @@ impl Registers {
             || (Self::bit(result, 7) && !Self::bit(lhs, 7));
     }
 
+    pub fn update_sreg_keep_z_if_resoult_zero(&mut self, lhs: u8, rhs: u8, result: u8) {
+        let old_z = self.sreg_z;
+
+        self.update_sreg(lhs, rhs, result);
+
+        if result == 0 {
+            self.sreg_z = old_z;
+        } else {
+            self.sreg_z = false;
+        }
+    }
+
     fn bit(var: u8, bit: u8) -> bool {
         (var & (1 << bit)) != 0
     }
@@ -260,7 +272,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sreg_update_result_zero() {
+    fn test_sreg_update_result_zero_no_keep() {
         let mut registers = Registers::new();
 
         registers.update_sreg(1, 2, 3);
@@ -268,6 +280,27 @@ mod tests {
 
         registers.update_sreg(2, 1, 0);
         assert_eq!(registers.sreg_z, true);
+    }
+
+    #[test]
+    fn test_sreg_update_result_zero_keep() {
+        let mut registers = Registers::new();
+
+        registers.sreg_z = true;
+        registers.update_sreg_keep_z_if_resoult_zero(1, 2, 3);
+        assert_eq!(registers.sreg_z, false);
+
+        registers.sreg_z = true;
+        registers.update_sreg_keep_z_if_resoult_zero(1, 2, 0);
+        assert_eq!(registers.sreg_z, true);
+
+        registers.sreg_z = false;
+        registers.update_sreg_keep_z_if_resoult_zero(1, 2, 3);
+        assert_eq!(registers.sreg_z, false);
+
+        registers.sreg_z = false;
+        registers.update_sreg_keep_z_if_resoult_zero(2, 1, 0);
+        assert_eq!(registers.sreg_z, false);
     }
 
     #[test]

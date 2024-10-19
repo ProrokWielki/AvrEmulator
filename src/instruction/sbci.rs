@@ -13,7 +13,7 @@ impl Instruction for SBCI {
 
         regisetrs.pc += 1;
 
-        regisetrs.update_sreg(regisetrs.r[self.d as usize], self.k, result);
+        regisetrs.update_sreg_keep_z_if_resoult_zero(regisetrs.r[self.d as usize], self.k, result);
 
         regisetrs.r[self.d as usize] = result;
     }
@@ -104,6 +104,32 @@ mod tests {
         let mut expected_registers = Registers::new();
         expected_registers.r[source_register as usize] = (source_value - constant_value) as u8;
         expected_registers.pc = 1;
+        expected_registers.sreg_z = false;
+
+        let sbci = SBCI::new(
+            (0x4000 as u16
+                | ((constant_value & 0x00f0) << 4)
+                | ((source_register - 16) << 4)
+                | (constant_value & 0x000f)) as u16,
+        );
+        sbci.process(&mut test_registers);
+
+        assert_eq!(test_registers, expected_registers);
+    }
+
+    #[test]
+    fn test_process_result_zero_wo_carry_zero_before() {
+        let source_register = 27;
+        let source_value: u16 = 30;
+        let constant_value: u16 = 30;
+
+        let mut test_registers = Registers::new();
+        test_registers.r[source_register as usize] = source_value as u8;
+        test_registers.sreg_z = true;
+
+        let mut expected_registers = Registers::new();
+        expected_registers.r[source_register as usize] = (source_value - constant_value) as u8;
+        expected_registers.pc = 1;
         expected_registers.sreg_z = true;
 
         let sbci = SBCI::new(
@@ -126,6 +152,33 @@ mod tests {
         let mut test_registers = Registers::new();
         test_registers.r[source_register as usize] = source_value as u8;
         test_registers.sreg_c = true;
+
+        let mut expected_registers = Registers::new();
+        expected_registers.r[source_register as usize] = (source_value - constant_value - 1) as u8;
+        expected_registers.pc = 1;
+        expected_registers.sreg_z = false;
+
+        let sbci = SBCI::new(
+            (0x4000 as u16
+                | ((constant_value & 0x00f0) << 4)
+                | ((source_register - 16) << 4)
+                | (constant_value & 0x000f)) as u16,
+        );
+        sbci.process(&mut test_registers);
+
+        assert_eq!(test_registers, expected_registers);
+    }
+
+    #[test]
+    fn test_process_result_zero_with_carry_zero_before() {
+        let source_register = 27;
+        let source_value: u16 = 30;
+        let constant_value: u16 = 29;
+
+        let mut test_registers = Registers::new();
+        test_registers.r[source_register as usize] = source_value as u8;
+        test_registers.sreg_c = true;
+        test_registers.sreg_z = true;
 
         let mut expected_registers = Registers::new();
         expected_registers.r[source_register as usize] = (source_value - constant_value - 1) as u8;
