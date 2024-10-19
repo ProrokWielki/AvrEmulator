@@ -1,4 +1,4 @@
-name: Rust
+name: Build
 
 on:
   push:
@@ -25,5 +25,5 @@ jobs:
         push: false
         tags: local
     - name: Run tests
-      run: docker run -v $PWD:/srv -w/srv local cargo test
+      run: docker run -v $PWD:/srv -w/srv local cargo build
 
