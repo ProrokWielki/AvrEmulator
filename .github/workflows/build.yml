@@ -13,7 +13,11 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
 
     steps:
     - name: Check out code
@@ -29,4 +33,4 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
     - name: build 
-      run: docker run -v $PWD:/srv -w/srv prorokwielki/avr_emulator cargo build
+      run: docker run -v $PWD:/srv -w/srv localhost:5000/prorokwielki/avr_emulator cargo build
