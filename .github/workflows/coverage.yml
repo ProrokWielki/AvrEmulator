@@ -21,8 +21,10 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .devcontainer
-        push: false
+        push: true
         tags: local
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
     - name: Push to coveralls.io
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
