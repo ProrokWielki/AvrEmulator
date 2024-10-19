@@ -26,6 +26,6 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .devcontainer
-        tags: prorokwielki/avr_emulator:latest
+        tags: pawelwarzecha/avr_emulator:latest
         push: true
      
