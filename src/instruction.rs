@@ -12,6 +12,7 @@ mod push;
 mod rcall;
 mod ret;
 mod rjmp;
+mod sbci;
 mod subi;
 
 pub trait Instruction {
@@ -85,6 +86,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if subi::SUBI::eq(opcode) {
         return Some(Box::new(subi::SUBI::new(opcode)));
+    }
+    if sbci::SBCI::eq(opcode) {
+        return Some(Box::new(sbci::SBCI::new(opcode)));
     }
 
     None
@@ -211,5 +215,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_subi_for_subi_opcode() {
         assert_eq!(get_instruction(0x5032).unwrap().str(), "subi r19, 2");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_sbci_for_sbci_opcode() {
+        assert_eq!(get_instruction(0x4045).unwrap().str(), "sbci r20, 5");
     }
 }
