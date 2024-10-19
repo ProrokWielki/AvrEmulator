@@ -3,7 +3,7 @@ name: Coverage
 on:
   push:
     branches: [ "master" ]
-      paths-ignore:
+    paths-ignore:
       - '.devcontainer/**'
   pull_request:
     branches: [ "master" ]
