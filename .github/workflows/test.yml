@@ -3,9 +3,17 @@ name: Test
 on:
   push:
     branches: [ "master" ]
+      paths-ignore:
+      - '.devcontainer/**'
   pull_request:
     branches: [ "master" ]
-
+    paths-ignore:
+      - '.devcontainer/**'
+  workflow_run:
+    workflows: ["Docker build"]
+    types:
+      - completed
+      
 env:
   CARGO_TERM_COLOR: always
 
@@ -17,10 +25,5 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v3
-    - name: Build docker images
-      uses: docker/build-push-action@v6
-      with:
-        context: .devcontainer
-        tags: prorokwielki/avr_emulator:latest
     - name: build 
-      run: docker run -v $PWD:/srv -w/srv prorokwielki/avr_emulator cargo test
+      run: docker run -v $PWD:/srv -w/srv pawelwarzecha/avr_emulator cargo test
