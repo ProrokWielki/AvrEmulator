@@ -5,10 +5,6 @@ on:
     branches: [ "master" ]
     paths:
         - '.devcontainer/Dockerfile'
-  pull_request:
-    branches: [ "master" ]
-    paths:
-        - '.devcontainer/Dockerfile'
         
 env:
   CARGO_TERM_COLOR: always
