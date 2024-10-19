@@ -1,5 +1,6 @@
 use crate::registers::Registers;
 
+mod cp;
 mod eor;
 mod i_in;
 mod i_std_y;
@@ -89,6 +90,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if sbci::SBCI::eq(opcode) {
         return Some(Box::new(sbci::SBCI::new(opcode)));
+    }
+    if cp::CP::eq(opcode) {
+        return Some(Box::new(cp::CP::new(opcode)));
     }
 
     None
@@ -220,5 +224,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_sbci_for_sbci_opcode() {
         assert_eq!(get_instruction(0x4045).unwrap().str(), "sbci r20, 5");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_cp_for_cp_opcode() {
+        assert_eq!(get_instruction(0x1456).unwrap().str(), "cp r5, r6");
     }
 }
