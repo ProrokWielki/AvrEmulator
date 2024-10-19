@@ -29,6 +29,4 @@ jobs:
         tags: prorokwielki/avr_emulator:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
-    - name: Run tests
-      run: docker run -v $PWD:/srv -w/srv prorokwielki/avr_emulator cargo build
-
+        run: docker run -v $PWD:/srv -w/srv prorokwielki/avr_emulator cargo build
