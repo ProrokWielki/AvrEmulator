@@ -22,4 +22,5 @@ RUN apk add      \
     git==~2      \
     py3-pytest==~8
 
+# for coverage
 RUN cargo install cargo-tarpaulin
