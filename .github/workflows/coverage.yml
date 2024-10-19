@@ -26,4 +26,4 @@ jobs:
     - name: Push to coveralls.io
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-      run: docker run --security-opt seccomp=unconfined -v $PWD:/srv -w/srv prorokwielki/avr_emulator:latest chown -R $USER /srv && cargo tarpaulin --ciserver github-ci --coveralls $COVERALLS_REPO_TOKEN
+      run: docker run --security-opt seccomp=unconfined -v $PWD:/srv -w/srv prorokwielki/avr_emulator:latest git config --global --add safe.directory "*" && cargo tarpaulin --ciserver github-ci --coveralls $COVERALLS_REPO_TOKEN
