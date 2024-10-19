@@ -22,10 +22,8 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .devcontainer
-        push: true
+        push: false
         tags: local
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
     - name: Run tests
       run: docker run -v $PWD:/srv -w/srv local cargo build
 
