@@ -20,6 +20,7 @@ mod ret;
 mod rjmp;
 mod sbc;
 mod sbci;
+mod sbiw;
 mod subi;
 
 pub trait Instruction {
@@ -117,6 +118,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if pop::POP::eq(opcode) {
         return Some(Box::new(pop::POP::new(opcode)));
+    }
+    if sbiw::SBIW::eq(opcode) {
+        return Some(Box::new(sbiw::SBIW::new(opcode)));
     }
 
     None
@@ -283,5 +287,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_pop_for_pop_opcode() {
         assert_eq!(get_instruction(0x90ff).unwrap().str(), "pop r15");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_sbiw_for_sbiw_opcode() {
+        assert_eq!(get_instruction(0x9700).unwrap().str(), "sbiw r25:r24, 0");
     }
 }
