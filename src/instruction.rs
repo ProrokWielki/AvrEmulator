@@ -13,6 +13,7 @@ mod ldi;
 mod movw;
 mod nop;
 mod out;
+mod pop;
 mod push;
 mod rcall;
 mod ret;
@@ -113,6 +114,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if brge::BRGE::eq(opcode) {
         return Some(Box::new(brge::BRGE::new(opcode)));
+    }
+    if pop::POP::eq(opcode) {
+        return Some(Box::new(pop::POP::new(opcode)));
     }
 
     None
@@ -274,5 +278,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_brge_for_brge_opcode() {
         assert_eq!(get_instruction(0xf414).unwrap().str(), "brge 2");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_pop_for_pop_opcode() {
+        assert_eq!(get_instruction(0x90ff).unwrap().str(), "pop r15");
     }
 }
