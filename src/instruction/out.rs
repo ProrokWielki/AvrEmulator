@@ -6,9 +6,9 @@ pub struct OUT {
 }
 
 impl Instruction for OUT {
-    fn process(&self, regisetrs: &mut Registers) {
-        regisetrs.pc += 1;
-        regisetrs.io[self.a as usize] = regisetrs.r[self.r as usize] as u8
+    fn process(&self, registers: &mut Registers) {
+        registers.pc += 1;
+        registers.io[self.a as usize] = registers.r[self.r as usize] as u8
     }
     fn str(&self) -> String {
         return format!("out {}, r{}", self.a, self.r).to_owned();
