@@ -1,5 +1,6 @@
 use crate::registers::Registers;
 
+mod brge;
 mod brlt;
 mod cp;
 mod cpc;
@@ -109,6 +110,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if cpi::CPI::eq(opcode) {
         return Some(Box::new(cpi::CPI::new(opcode)));
+    }
+    if brge::BRGE::eq(opcode) {
+        return Some(Box::new(brge::BRGE::new(opcode)));
     }
 
     None
@@ -265,5 +269,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_cpi_for_cpi_opcode() {
         assert_eq!(get_instruction(0x3012).unwrap().str(), "cpi r17, 2");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_brge_for_brge_opcode() {
+        assert_eq!(get_instruction(0xf414).unwrap().str(), "brge 2");
     }
 }
