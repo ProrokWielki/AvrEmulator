@@ -92,20 +92,32 @@ impl Registers {
     pub fn update_sreg(&mut self, lhs: u8, rhs: u8, result: u8) {
         self.sreg_s = self.sreg_n != self.sreg_v;
 
-        self.sreg_h = (!Self::bit(lhs, 3) && Self::bit(rhs, 3))
-            || (Self::bit(rhs, 3) && Self::bit(result, 3))
-            || (Self::bit(result, 3) && !Self::bit(lhs, 3));
+        self.sreg_h = (!Self::bit8(lhs, 3) && Self::bit8(rhs, 3))
+            || (Self::bit8(rhs, 3) && Self::bit8(result, 3))
+            || (Self::bit8(result, 3) && !Self::bit8(lhs, 3));
 
-        self.sreg_v = (Self::bit(lhs, 7) && !Self::bit(rhs, 7) && !Self::bit(rhs, 7))
-            || (!Self::bit(lhs, 7) && Self::bit(rhs, 7) && Self::bit(result, 7));
+        self.sreg_v = (Self::bit8(lhs, 7) && !Self::bit8(rhs, 7) && !Self::bit8(rhs, 7))
+            || (!Self::bit8(lhs, 7) && Self::bit8(rhs, 7) && Self::bit8(result, 7));
 
-        self.sreg_n = Self::bit(result, 7);
+        self.sreg_n = Self::bit8(result, 7);
 
         self.sreg_z = result == 0;
 
-        self.sreg_c = (!Self::bit(lhs, 7) && Self::bit(rhs, 7))
-            || (Self::bit(rhs, 7) && Self::bit(result, 7))
-            || (Self::bit(result, 7) && !Self::bit(lhs, 7));
+        self.sreg_c = (!Self::bit8(lhs, 7) && Self::bit8(rhs, 7))
+            || (Self::bit8(rhs, 7) && Self::bit8(result, 7))
+            || (Self::bit8(result, 7) && !Self::bit8(lhs, 7));
+    }
+
+    pub fn update_sreg_16bit(&mut self, lhs: u16, _rhs: u16, result: u16) {
+        self.sreg_s = self.sreg_n != self.sreg_v;
+
+        self.sreg_v = Self::bit16(result, 15) && !Self::bit16(lhs, 15);
+
+        self.sreg_n = Self::bit16(result, 15);
+
+        self.sreg_z = result == 0;
+
+        self.sreg_c = Self::bit16(result, 15) && !Self::bit16(lhs, 15);
     }
 
     pub fn update_sreg_keep_z_if_resoult_zero(&mut self, lhs: u8, rhs: u8, result: u8) {
@@ -120,8 +132,12 @@ impl Registers {
         }
     }
 
-    fn bit(var: u8, bit: u8) -> bool {
+    fn bit16(var: u16, bit: u16) -> bool {
         (var & (1 << bit)) != 0
+    }
+
+    fn bit8(var: u8, bit: u8) -> bool {
+        Self::bit16(var as u16, bit as u16)
     }
 }
 
@@ -130,11 +146,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_bit() {
+    fn test_bit8() {
         let test_value = 0b1011_0010;
 
         for i in 0..7 {
-            assert_eq!(Registers::bit(test_value, i), (test_value & (1 << i)) != 0);
+            assert_eq!(Registers::bit8(test_value, i), (test_value & (1 << i)) != 0);
+        }
+    }
+
+    #[test]
+    fn test_bit16() {
+        let test_value = 0xabcd;
+
+        for i in 0..15 {
+            assert_eq!(
+                Registers::bit16(test_value, i),
+                (test_value & (1 << i)) != 0
+            );
         }
     }
 
