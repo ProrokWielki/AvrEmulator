@@ -3,6 +3,7 @@ use crate::registers::Registers;
 mod breq;
 mod brge;
 mod brlt;
+mod brne;
 mod cp;
 mod cpc;
 mod cpi;
@@ -125,6 +126,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if breq::BREQ::eq(opcode) {
         return Some(Box::new(breq::BREQ::new(opcode)));
+    }
+    if brne::BRNE::eq(opcode) {
+        return Some(Box::new(brne::BRNE::new(opcode)));
     }
 
     None
@@ -301,5 +305,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_breq_for_breq_opcode() {
         assert_eq!(get_instruction(0xf001).unwrap().str(), "breq 0");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_brne_for_brne_opcode() {
+        assert_eq!(get_instruction(0xf401).unwrap().str(), "brne 0");
     }
 }
