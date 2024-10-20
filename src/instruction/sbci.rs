@@ -6,16 +6,16 @@ pub struct SBCI {
 }
 
 impl Instruction for SBCI {
-    fn process(&self, regisetrs: &mut Registers) {
-        let result = regisetrs.r[self.d as usize]
+    fn process(&self, registers: &mut Registers) {
+        let result = registers.r[self.d as usize]
             .wrapping_sub(self.k)
-            .wrapping_sub(if regisetrs.sreg_c { 1 } else { 0 });
+            .wrapping_sub(if registers.sreg_c { 1 } else { 0 });
 
-        regisetrs.pc += 1;
+        registers.pc += 1;
 
-        regisetrs.update_sreg_keep_z_if_resoult_zero(regisetrs.r[self.d as usize], self.k, result);
+        registers.update_sreg_keep_z_if_resoult_zero(registers.r[self.d as usize], self.k, result);
 
-        regisetrs.r[self.d as usize] = result;
+        registers.r[self.d as usize] = result;
     }
     fn str(&self) -> String {
         return format!("sbci r{}, {}", self.d, self.k).to_owned();

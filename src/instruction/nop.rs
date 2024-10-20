@@ -3,8 +3,8 @@ use crate::{instruction::Instruction, registers::Registers};
 pub struct NOP {}
 
 impl Instruction for NOP {
-    fn process(&self, regisetrs: &mut Registers) {
-        regisetrs.pc += 1;
+    fn process(&self, registers: &mut Registers) {
+        registers.pc += 1;
     }
     fn str(&self) -> String {
         return "nop".to_owned();

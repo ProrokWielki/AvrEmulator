@@ -3,9 +3,9 @@ use crate::{instruction::Instruction, registers::Registers};
 pub struct RET {}
 
 impl Instruction for RET {
-    fn process(&self, regisetrs: &mut Registers) {
-        regisetrs.set_sp(regisetrs.sp() + 2);
-        regisetrs.pc = regisetrs.stack[regisetrs.sp() as usize] as i32;
+    fn process(&self, registers: &mut Registers) {
+        registers.set_sp(registers.sp() + 2);
+        registers.pc = registers.stack[registers.sp() as usize] as i32;
     }
     fn str(&self) -> String {
         return format!("ret").to_owned();

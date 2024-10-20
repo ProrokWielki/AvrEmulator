@@ -5,8 +5,8 @@ pub struct RJMP {
 }
 
 impl Instruction for RJMP {
-    fn process(&self, regisetrs: &mut Registers) {
-        regisetrs.pc += 1 + self.k;
+    fn process(&self, registers: &mut Registers) {
+        registers.pc += 1 + self.k;
     }
     fn str(&self) -> String {
         return format!("rjmp {}", self.k).to_owned();

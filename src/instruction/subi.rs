@@ -6,14 +6,14 @@ pub struct SUBI {
 }
 
 impl Instruction for SUBI {
-    fn process(&self, regisetrs: &mut Registers) {
-        regisetrs.pc += 1;
+    fn process(&self, registers: &mut Registers) {
+        registers.pc += 1;
 
-        let result = regisetrs.r[self.d as usize].wrapping_sub(self.k);
+        let result = registers.r[self.d as usize].wrapping_sub(self.k);
 
-        regisetrs.update_sreg(regisetrs.r[self.d as usize], self.k, result);
+        registers.update_sreg(registers.r[self.d as usize], self.k, result);
 
-        regisetrs.r[self.d as usize] = result as u8;
+        registers.r[self.d as usize] = result as u8;
     }
     fn str(&self) -> String {
         return format!("subi r{}, {}", self.d, self.k).to_owned();

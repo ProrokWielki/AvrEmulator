@@ -6,14 +6,14 @@ pub struct CP {
 }
 
 impl Instruction for CP {
-    fn process(&self, regisetrs: &mut Registers) {
-        let result = regisetrs.r[self.d as usize].wrapping_sub(regisetrs.r[self.r as usize]);
+    fn process(&self, registers: &mut Registers) {
+        let result = registers.r[self.d as usize].wrapping_sub(registers.r[self.r as usize]);
 
-        regisetrs.pc += 1;
+        registers.pc += 1;
 
-        regisetrs.update_sreg(
-            regisetrs.r[self.d as usize],
-            regisetrs.r[self.r as usize],
+        registers.update_sreg(
+            registers.r[self.d as usize],
+            registers.r[self.r as usize],
             result,
         );
     }

@@ -5,10 +5,10 @@ pub struct PUSH {
 }
 
 impl Instruction for PUSH {
-    fn process(&self, regisetrs: &mut Registers) {
-        regisetrs.stack[regisetrs.sp() as usize] = (regisetrs.r[self.r as usize]) as u8;
-        regisetrs.set_sp(regisetrs.sp() - 1);
-        regisetrs.pc += 1
+    fn process(&self, registers: &mut Registers) {
+        registers.stack[registers.sp() as usize] = (registers.r[self.r as usize]) as u8;
+        registers.set_sp(registers.sp() - 1);
+        registers.pc += 1
     }
     fn str(&self) -> String {
         return format!("push r{}", self.r).to_owned();

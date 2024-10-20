@@ -6,9 +6,9 @@ pub struct IN {
 }
 
 impl Instruction for IN {
-    fn process(&self, regisetrs: &mut Registers) {
-        regisetrs.pc += 1;
-        regisetrs.r[self.d as usize] = regisetrs.io[self.a as usize]
+    fn process(&self, registers: &mut Registers) {
+        registers.pc += 1;
+        registers.r[self.d as usize] = registers.io[self.a as usize]
     }
     fn str(&self) -> String {
         return format!("in r{}, {}", self.d, self.a).to_owned();

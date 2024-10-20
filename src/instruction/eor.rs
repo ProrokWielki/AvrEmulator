@@ -6,9 +6,9 @@ pub struct EOR {
 }
 
 impl Instruction for EOR {
-    fn process(&self, regisetrs: &mut Registers) {
-        regisetrs.r[self.d as usize] ^= regisetrs.r[self.r as usize];
-        regisetrs.pc += 1;
+    fn process(&self, registers: &mut Registers) {
+        registers.r[self.d as usize] ^= registers.r[self.r as usize];
+        registers.pc += 1;
     }
     fn str(&self) -> String {
         return format!("eor r{}, r{}", self.d, self.r).to_owned();

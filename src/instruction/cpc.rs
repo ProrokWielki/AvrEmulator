@@ -6,16 +6,16 @@ pub struct CPC {
 }
 
 impl Instruction for CPC {
-    fn process(&self, regisetrs: &mut Registers) {
-        let result: u8 = (regisetrs.r[self.d as usize])
-            .wrapping_sub(regisetrs.r[self.r as usize])
-            .wrapping_sub(if regisetrs.sreg_c { 1 } else { 0 });
+    fn process(&self, registers: &mut Registers) {
+        let result: u8 = (registers.r[self.d as usize])
+            .wrapping_sub(registers.r[self.r as usize])
+            .wrapping_sub(if registers.sreg_c { 1 } else { 0 });
 
-        regisetrs.pc += 1;
+        registers.pc += 1;
 
-        regisetrs.update_sreg_keep_z_if_resoult_zero(
-            regisetrs.r[self.d as usize],
-            regisetrs.r[self.r as usize],
+        registers.update_sreg_keep_z_if_resoult_zero(
+            registers.r[self.d as usize],
+            registers.r[self.r as usize],
             result,
         );
     }
