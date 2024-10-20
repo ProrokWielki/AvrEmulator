@@ -118,6 +118,7 @@ mod tests {
         expected_registers.pc = 1;
         expected_registers.sreg_c = true;
         expected_registers.sreg_n = true;
+        expected_registers.sreg_s = true;
 
         let cp = CP::new(
             (0x1400 as u16

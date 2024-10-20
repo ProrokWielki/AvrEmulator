@@ -265,6 +265,7 @@ mod tests {
         expected_registers.sreg_n = true;
         expected_registers.sreg_h = true;
         expected_registers.sreg_c = true;
+        expected_registers.sreg_s = true;
 
         let sbc = SBC::new(
             (0x0800 as u16
@@ -295,6 +296,7 @@ mod tests {
         expected_registers.sreg_n = true;
         expected_registers.sreg_h = true;
         expected_registers.sreg_c = true;
+        expected_registers.sreg_s = true;
 
         let sbc = SBC::new(
             (0x0800 as u16
@@ -327,6 +329,7 @@ mod tests {
         expected_registers.sreg_n = true;
         expected_registers.sreg_h = true;
         expected_registers.sreg_c = true;
+        expected_registers.sreg_s = true;
 
         let sbc = SBC::new(
             (0x0800 as u16

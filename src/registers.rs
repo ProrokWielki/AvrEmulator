@@ -90,8 +90,6 @@ impl Registers {
     }
 
     pub fn update_sreg(&mut self, lhs: u8, rhs: u8, result: u8) {
-        self.sreg_s = self.sreg_n != self.sreg_v;
-
         self.sreg_h = (!Self::bit8(lhs, 3) && Self::bit8(rhs, 3))
             || (Self::bit8(rhs, 3) && Self::bit8(result, 3))
             || (Self::bit8(result, 3) && !Self::bit8(lhs, 3));
@@ -106,11 +104,11 @@ impl Registers {
         self.sreg_c = (!Self::bit8(lhs, 7) && Self::bit8(rhs, 7))
             || (Self::bit8(rhs, 7) && Self::bit8(result, 7))
             || (Self::bit8(result, 7) && !Self::bit8(lhs, 7));
+
+        self.sreg_s = self.sreg_n != self.sreg_v;
     }
 
     pub fn update_sreg_16bit(&mut self, lhs: u16, _rhs: u16, result: u16) {
-        self.sreg_s = self.sreg_n != self.sreg_v;
-
         self.sreg_v = Self::bit16(result, 15) && !Self::bit16(lhs, 15);
 
         self.sreg_n = Self::bit16(result, 15);
@@ -118,6 +116,8 @@ impl Registers {
         self.sreg_z = result == 0;
 
         self.sreg_c = Self::bit16(result, 15) && !Self::bit16(lhs, 15);
+
+        self.sreg_s = self.sreg_n != self.sreg_v;
     }
 
     pub fn update_sreg_keep_z_if_resoult_zero(&mut self, lhs: u8, rhs: u8, result: u8) {
@@ -377,13 +377,68 @@ mod tests {
     fn test_sreg_update_s_bit() {
         let mut registers = Registers::new();
 
-        registers.update_sreg(0, 1, 2);
+        registers.update_sreg(0u8.wrapping_sub(120), 10, 0u8.wrapping_sub(130));
+        assert_eq!(registers.sreg_s, true);
+
+        registers.update_sreg(10, 20, 0u8.wrapping_sub(10));
+        assert_eq!(registers.sreg_s, true);
+
+        registers.update_sreg(20, 10, 10);
+        assert_eq!(registers.sreg_s, false);
+    }
+
+    #[test]
+    fn test_sreg_update_16bit_s_bit() {
+        let mut registers = Registers::new();
+
+        registers.update_sreg_16bit(0u16.wrapping_sub(120), 10, 0u16.wrapping_sub(130));
+        assert_eq!(registers.sreg_s, true);
+
+        registers.update_sreg_16bit(10, 20, 20);
+        assert_eq!(registers.sreg_s, false);
+    }
+
+    #[test]
+    fn test_sreg_update_16bit_v_bit() {
+        let mut registers = Registers::new();
+
+        registers.update_sreg_16bit(0, 0xffff, 0x8000);
+        assert_eq!(registers.sreg_v, true);
+
+        registers.update_sreg_16bit(0x8000, 0, 0x7fff);
         assert_eq!(registers.sreg_v, false);
+    }
 
-        registers.update_sreg(127, 128, 129);
-        assert_eq!(registers.sreg_v, true);
+    #[test]
+    fn test_sreg_update_16bit_n_bit() {
+        let mut registers = Registers::new();
 
-        registers.update_sreg(128, 125, 126);
-        assert_eq!(registers.sreg_v, true);
+        registers.update_sreg_16bit(0, 0, 0x8000);
+        assert_eq!(registers.sreg_n, true);
+
+        registers.update_sreg_16bit(0, 0, 0x7fff);
+        assert_eq!(registers.sreg_n, false);
+    }
+
+    #[test]
+    fn test_sreg_update_16bit_z_bit() {
+        let mut registers = Registers::new();
+
+        registers.update_sreg_16bit(0xffff, 0xffff, 0);
+        assert_eq!(registers.sreg_z, true);
+
+        registers.update_sreg_16bit(0, 0, 1);
+        assert_eq!(registers.sreg_z, false);
+    }
+
+    #[test]
+    fn test_sreg_update_16bit_c_bit() {
+        let mut registers = Registers::new();
+
+        registers.update_sreg_16bit(0, 0x7000, 0x8000);
+        assert_eq!(registers.sreg_c, true);
+
+        registers.update_sreg_16bit(0, 0x8000, 0x7000);
+        assert_eq!(registers.sreg_c, false);
     }
 }

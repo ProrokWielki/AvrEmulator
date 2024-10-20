@@ -267,6 +267,7 @@ mod tests {
         expected_registers.sreg_c = true;
         expected_registers.sreg_n = true;
         expected_registers.sreg_h = true;
+        expected_registers.sreg_s = true;
 
         let cpc = CPC::new(
             (0x0400 as u16
@@ -329,6 +330,7 @@ mod tests {
         expected_registers.sreg_c = true;
         expected_registers.sreg_n = true;
         expected_registers.sreg_h = true;
+        expected_registers.sreg_s = true;
 
         let cpc = CPC::new(
             (0x0400 as u16

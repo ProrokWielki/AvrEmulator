@@ -213,6 +213,7 @@ mod tests {
         expected_registers.sreg_c = true;
         expected_registers.sreg_n = true;
         expected_registers.sreg_h = true;
+        expected_registers.sreg_s = true;
 
         let sbci = SBCI::new(
             (0x4000 as u16
@@ -240,6 +241,7 @@ mod tests {
         expected_registers.pc = 1;
         expected_registers.sreg_c = true;
         expected_registers.sreg_n = true;
+        expected_registers.sreg_s = true;
 
         let sbci = SBCI::new(
             (0x4000 as u16
@@ -268,6 +270,7 @@ mod tests {
         expected_registers.pc = 1;
         expected_registers.sreg_c = true;
         expected_registers.sreg_n = true;
+        expected_registers.sreg_s = true;
 
         let sbci = SBCI::new(
             (0x4000 as u16

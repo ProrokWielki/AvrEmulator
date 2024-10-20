@@ -106,6 +106,7 @@ mod tests {
         expected_registers.pc = 1;
         expected_registers.sreg_n = true;
         expected_registers.sreg_c = true;
+        expected_registers.sreg_s = true;
 
         let cpi = CPI::new(
             (0x3000 as u16

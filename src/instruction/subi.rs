@@ -106,6 +106,7 @@ mod tests {
         expected_registers.pc = 1;
         expected_registers.sreg_c = true;
         expected_registers.sreg_n = true;
+        expected_registers.sreg_s = true;
 
         let subi = SUBI::new(
             (0x5000 as u16
