@@ -15,6 +15,7 @@ mod push;
 mod rcall;
 mod ret;
 mod rjmp;
+mod sbc;
 mod sbci;
 mod subi;
 
@@ -102,6 +103,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     if brlt::BRLT::eq(opcode) {
         return Some(Box::new(brlt::BRLT::new(opcode)));
     }
+    if sbc::SBC::eq(opcode) {
+        return Some(Box::new(sbc::SBC::new(opcode)));
+    }
 
     None
 }
@@ -113,7 +117,7 @@ mod tests {
     struct MockInstruction {}
 
     impl Instruction for MockInstruction {
-        fn process(&self, _regisetrs: &mut Registers) {}
+        fn process(&self, _registers: &mut Registers) {}
         fn str(&self) -> String {
             return "mock".to_owned();
         }
@@ -247,5 +251,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_brlt_for_brlt_opcode() {
         assert_eq!(get_instruction(0xf004).unwrap().str(), "brlt 0");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_sbc_for_sbc_opcode() {
+        assert_eq!(get_instruction(0x089a).unwrap().str(), "sbc r9, r10");
     }
 }
