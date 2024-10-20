@@ -1,5 +1,6 @@
 use crate::registers::Registers;
 
+mod breq;
 mod brge;
 mod brlt;
 mod cp;
@@ -121,6 +122,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if sbiw::SBIW::eq(opcode) {
         return Some(Box::new(sbiw::SBIW::new(opcode)));
+    }
+    if breq::BREQ::eq(opcode) {
+        return Some(Box::new(breq::BREQ::new(opcode)));
     }
 
     None
@@ -292,5 +296,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_sbiw_for_sbiw_opcode() {
         assert_eq!(get_instruction(0x9700).unwrap().str(), "sbiw r25:r24, 0");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_breq_for_breq_opcode() {
+        assert_eq!(get_instruction(0xf001).unwrap().str(), "breq 0");
     }
 }
