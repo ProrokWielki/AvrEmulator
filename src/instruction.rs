@@ -1,5 +1,6 @@
 use crate::registers::Registers;
 
+mod brlt;
 mod cp;
 mod cpc;
 mod eor;
@@ -97,6 +98,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if cpc::CPC::eq(opcode) {
         return Some(Box::new(cpc::CPC::new(opcode)));
+    }
+    if brlt::BRLT::eq(opcode) {
+        return Some(Box::new(brlt::BRLT::new(opcode)));
     }
 
     None
@@ -238,5 +242,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_cpc_for_cpc_opcode() {
         assert_eq!(get_instruction(0x048c).unwrap().str(), "cpc r8, r12");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_brlt_for_brlt_opcode() {
+        assert_eq!(get_instruction(0xf004).unwrap().str(), "brlt 0");
     }
 }
