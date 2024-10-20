@@ -47,8 +47,18 @@ fn test_nop_in_while() {
 
 #[test]
 #[serial_test::serial]
-fn test_local_variable() {
+fn test_local_variables() {
     TestFixture::set_up("local_variables".to_owned());
+
+    assert!(TestFixture::prepare_cmake());
+    assert!(TestFixture::call_make());
+    assert!(TestFixture::run_tests());
+}
+
+#[test]
+#[serial_test::serial]
+fn test_if_statements() {
+    TestFixture::set_up("if_statements".to_owned());
 
     assert!(TestFixture::prepare_cmake());
     assert!(TestFixture::call_make());
