@@ -3,6 +3,7 @@ use crate::registers::Registers;
 mod brlt;
 mod cp;
 mod cpc;
+mod cpi;
 mod eor;
 mod i_in;
 mod i_std_y;
@@ -105,6 +106,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if sbc::SBC::eq(opcode) {
         return Some(Box::new(sbc::SBC::new(opcode)));
+    }
+    if cpi::CPI::eq(opcode) {
+        return Some(Box::new(cpi::CPI::new(opcode)));
     }
 
     None
@@ -256,5 +260,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_sbc_for_sbc_opcode() {
         assert_eq!(get_instruction(0x089a).unwrap().str(), "sbc r9, r10");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_cpi_for_cpi_opcode() {
+        assert_eq!(get_instruction(0x3012).unwrap().str(), "cpi r17, 2");
     }
 }
