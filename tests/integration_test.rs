@@ -2,6 +2,7 @@ struct TestFixture {}
 
 impl TestFixture {
     pub fn set_up(test_name: String) {
+        std::env::set_current_dir(std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))).unwrap();
         std::env::set_current_dir(format!("./tests/{}/", test_name)).expect("Test does not exist");
 
         std::fs::create_dir_all("./build").unwrap();
@@ -12,37 +13,42 @@ impl TestFixture {
         let cmake = std::process::Command::new("cmake")
             .arg("..")
             .arg("-DCMAKE_TOOLCHAIN_FILE=../../avr.cmake")
-            .output()
+            .status()
             .unwrap();
 
-        println!("stdout: {}", String::from_utf8(cmake.stdout).unwrap());
-        println!("stderr: {}", String::from_utf8(cmake.stderr).unwrap());
-        cmake.status.success()
+        cmake.success()
     }
 
     pub fn call_make() -> bool {
-        let make = std::process::Command::new("make").output().unwrap();
+        let make = std::process::Command::new("make").status().unwrap();
 
-        println!("stdout: {}", String::from_utf8(make.stdout).unwrap());
-        println!("stderr: {}", String::from_utf8(make.stderr).unwrap());
-        make.status.success()
+        make.success()
     }
 
     pub fn run_tests() -> bool {
         let test = std::process::Command::new("make")
             .arg("test")
-            .output()
+            .status()
             .unwrap();
-        println!("stdout: {}", String::from_utf8(test.stdout).unwrap());
-        println!("stderr: {}", String::from_utf8(test.stderr).unwrap());
 
-        test.status.success()
+        test.success()
     }
 }
 
 #[test]
+#[serial_test::serial]
 fn test_nop_in_while() {
     TestFixture::set_up("nop_in_while".to_owned());
+
+    assert!(TestFixture::prepare_cmake());
+    assert!(TestFixture::call_make());
+    assert!(TestFixture::run_tests());
+}
+
+#[test]
+#[serial_test::serial]
+fn test_local_variable() {
+    TestFixture::set_up("local_variables".to_owned());
 
     assert!(TestFixture::prepare_cmake());
     assert!(TestFixture::call_make());
