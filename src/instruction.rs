@@ -10,6 +10,7 @@ mod cpi;
 mod eor;
 mod i_in;
 mod i_std_y;
+mod ld_z;
 mod ldd_y;
 mod ldi;
 mod movw;
@@ -23,6 +24,8 @@ mod rjmp;
 mod sbc;
 mod sbci;
 mod sbiw;
+mod sbr;
+mod st_z;
 mod subi;
 
 pub trait Instruction {
@@ -129,6 +132,15 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if brne::BRNE::eq(opcode) {
         return Some(Box::new(brne::BRNE::new(opcode)));
+    }
+    if ld_z::LDZ::eq(opcode) {
+        return Some(Box::new(ld_z::LDZ::new(opcode)));
+    }
+    if sbr::SBR::eq(opcode) {
+        return Some(Box::new(sbr::SBR::new(opcode)));
+    }
+    if st_z::STZ::eq(opcode) {
+        return Some(Box::new(st_z::STZ::new(opcode)));
     }
 
     None
@@ -310,5 +322,20 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_brne_for_brne_opcode() {
         assert_eq!(get_instruction(0xf401).unwrap().str(), "brne 0");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_ldz_for_ldz_opcode() {
+        assert_eq!(get_instruction(0x8010).unwrap().str(), "ld r1, z");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_sbr_for_sbr_opcode() {
+        assert_eq!(get_instruction(0x6000).unwrap().str(), "sbr r16, 0");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_stz_for_stz_opcode() {
+        assert_eq!(get_instruction(0x8200).unwrap().str(), "st z, r0");
     }
 }
