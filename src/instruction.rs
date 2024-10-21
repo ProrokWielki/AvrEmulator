@@ -4,6 +4,7 @@ mod breq;
 mod brge;
 mod brlt;
 mod brne;
+mod bset;
 mod cp;
 mod cpc;
 mod cpi;
@@ -141,6 +142,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if st_z::STZ::eq(opcode) {
         return Some(Box::new(st_z::STZ::new(opcode)));
+    }
+    if bset::BSET::eq(opcode) {
+        return Some(Box::new(bset::BSET::new(opcode)));
     }
 
     None
@@ -337,5 +341,10 @@ mod tests {
     #[test]
     fn test_get_instruction_retunrs_stz_for_stz_opcode() {
         assert_eq!(get_instruction(0x8200).unwrap().str(), "st z, r0");
+    }
+
+    #[test]
+    fn test_get_instruction_retunrs_bset_for_bset_opcode() {
+        assert_eq!(get_instruction(0x9408).unwrap().str(), "bset 0");
     }
 }
