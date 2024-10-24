@@ -14,6 +14,10 @@ struct Opt {
     /// Verbose mode (-v, -vv, -vvv, etc.)
     verbose: u8,
 
+    #[structopt(short, long, default_value = "1000000")]
+    /// clock frequency in Hz
+    frequency: i64,
+
     /// hex file to be "executed"
     #[structopt(name = "FILE", parse(from_os_str))]
     file_name: PathBuf,
