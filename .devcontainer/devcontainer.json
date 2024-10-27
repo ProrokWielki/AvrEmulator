@@ -3,7 +3,8 @@
         "dockerfile": "Dockerfile"
     },
     "runArgs": [
-        "--security-opt seccomp=unconfined" // for tarpaulin
+        "--security-opt", // for tarpaulin
+        "seccomp=unconfined" // for tarpaulin
     ],
     "customizations": {
         "vscode": {
