@@ -1,10 +1,13 @@
 use std::path::{Path, PathBuf};
 
+use clock::Subscriber;
 use structopt::StructOpt;
 
 use registers::Registers;
 
+pub mod clock;
 pub mod instruction;
+pub mod instruction_executor;
 pub mod registers;
 
 #[derive(Debug, StructOpt)]
@@ -21,28 +24,6 @@ struct Opt {
     /// hex file to be "executed"
     #[structopt(name = "FILE", parse(from_os_str))]
     file_name: PathBuf,
-}
-
-fn get_instruction_from_address(hexdump: &bin_file::BinFile, address: usize) -> u16 {
-    let offset = address * 2;
-
-    let a = hexdump.get_value_by_address(offset).unwrap() as u16;
-    let b = hexdump.get_value_by_address(offset + 1).unwrap() as u16;
-
-    (b << 8 | a) as u16
-}
-
-fn find_instruction_from_opcode(opcode: u16, registers: &mut registers::Registers) {
-    match instruction::get_instruction(opcode) {
-        None => {
-            log::error!("unknown opcode: {:#06x}", opcode);
-            std::process::exit(2);
-        }
-        Some(instruction) => {
-            log::info!("instruction: {}", instruction.str());
-            instruction.process(registers);
-        }
-    }
 }
 
 fn to_filter_level(verbose: u8) -> log::LevelFilter {
@@ -73,11 +54,20 @@ fn main() {
 
     let hex_dump = bin_file::BinFile::from_file(Path::new(&file_path)).unwrap();
 
-    let mut registers = Registers::new();
-    loop {
-        find_instruction_from_opcode(
-            get_instruction_from_address(&hex_dump, registers.pc as usize),
-            &mut registers,
-        );
-    }
+    let mut instruction_executor: Box<dyn Subscriber> = Box::new(
+        instruction_executor::InstructionExecutor::new(Registers::new(), hex_dump),
+    );
+
+    let mut clock = clock::Clock::new(opt.frequency as f64);
+    clock.subscribe(&*instruction_executor);
+
+    let instruction_executor_thread = std::thread::spawn(move || loop {
+        instruction_executor.run();
+    });
+    let clock_thread = std::thread::spawn(move || loop {
+        clock.run();
+    });
+
+    instruction_executor_thread.join().unwrap();
+    clock_thread.join().unwrap();
 }
