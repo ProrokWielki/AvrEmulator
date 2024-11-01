@@ -1,6 +1,7 @@
 use crate::registers::Registers;
 
 mod andi;
+mod brbs;
 mod breq;
 mod brge;
 mod brlt;
@@ -154,6 +155,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if andi::ANDI::eq(opcode) {
         return Some(Box::new(andi::ANDI::new(opcode)));
+    }
+    if brbs::BRBS::eq(opcode) {
+        return Some(Box::new(brbs::BRBS::new(opcode)));
     }
 
     None
@@ -365,5 +369,10 @@ mod tests {
     #[test]
     fn test_get_instruction_returns_andi_for_andi_opcode() {
         assert_eq!(get_instruction(0x7012).unwrap().str(), "andi r17, 2");
+    }
+
+    #[test]
+    fn test_get_instruction_returns_brbs_for_brbs_opcode() {
+        assert_eq!(get_instruction(0xf012).unwrap().str(), "brbs 2, 2");
     }
 }
