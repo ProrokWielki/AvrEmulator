@@ -26,7 +26,7 @@ impl EOR {
 
     pub fn new(opcode: u16) -> Self {
         let d_value = (opcode & Self::D_MASK) >> 4;
-        let r_value = ((opcode & 0b0000_0010_0000_0000) >> 4) | (opcode & 0b0000_0000_0000_1111);
+        let r_value = ((opcode & 0b0000_0010_0000_0000) >> 5) | (opcode & 0b0000_0000_0000_1111);
 
         Self {
             d: d_value,
@@ -50,6 +50,20 @@ mod tests {
         expected_registers.pc = 1;
 
         let eor: EOR = EOR::new(0x2433);
+        eor.process(&mut test_registers);
+
+        assert_eq!(test_registers, expected_registers);
+    }
+
+    #[test]
+    fn test_process_same_register_over_15() {
+        let mut test_registers = Registers::new();
+        test_registers.r[31] = 15;
+
+        let mut expected_registers = Registers::new();
+        expected_registers.pc = 1;
+
+        let eor: EOR = EOR::new(0x27ff);
         eor.process(&mut test_registers);
 
         assert_eq!(test_registers, expected_registers);
