@@ -1,5 +1,6 @@
 use crate::registers::Registers;
 
+mod andi;
 mod breq;
 mod brge;
 mod brlt;
@@ -150,6 +151,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if bset::BSET::eq(opcode) {
         return Some(Box::new(bset::BSET::new(opcode)));
+    }
+    if andi::ANDI::eq(opcode) {
+        return Some(Box::new(andi::ANDI::new(opcode)));
     }
 
     None
@@ -356,5 +360,10 @@ mod tests {
     #[test]
     fn test_get_instruction_returns_mov_for_mov_opcode() {
         assert_eq!(get_instruction(0x2c01).unwrap().str(), "mov r0, r1");
+    }
+
+    #[test]
+    fn test_get_instruction_returns_andi_for_andi_opcode() {
+        assert_eq!(get_instruction(0x7012).unwrap().str(), "andi r17, 2");
     }
 }
