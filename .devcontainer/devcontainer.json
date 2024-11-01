@@ -13,7 +13,10 @@
                 "ms-vscode.cpptools",
                 "ms-vscode.cpptools-extension-pack",
                 "streetsidesoftware.code-spell-checker",
-                "ms-python.python"
+                "ms-python.python",
+                "github.vscode-github-actions",
+                "xaver.clang-format",
+                "Gruntfuggly.todo-tree"
             ]
         }
     }
