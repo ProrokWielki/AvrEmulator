@@ -4,12 +4,15 @@ use crate::registers;
 
 pub struct InstructionExecutor {
     rising_edge_notified: std::sync::atomic::AtomicBool,
-    registers: registers::Registers,
+    registers: std::sync::Arc<registers::Registers>,
     hex_dump: bin_file::BinFile,
 }
 
 impl InstructionExecutor {
-    pub fn new(registers: registers::Registers, hex_dump: bin_file::BinFile) -> Self {
+    pub fn new(
+        registers: std::sync::Arc<registers::Registers>,
+        hex_dump: bin_file::BinFile,
+    ) -> Self {
         Self {
             rising_edge_notified: std::sync::atomic::AtomicBool::new(false),
             registers: registers,
@@ -63,7 +66,7 @@ impl<'a> clock::Subscriber for InstructionExecutor {
         {
             let current_instruction_opcode = self.get_current_instruction_opcode();
             let current_instruction = self.find_instruction_from_opcode(current_instruction_opcode);
-            current_instruction.process(&mut self.registers);
+            current_instruction.process(std::sync::Arc::make_mut(&mut self.registers));
 
             self.rising_edge_notified
                 .store(false, std::sync::atomic::Ordering::Relaxed);
@@ -78,10 +81,12 @@ mod tests {
 
     #[test]
     fn test_run_without_notify() {
-        let empty_registers = registers::Registers::new();
+        let empty_registers = std::sync::Arc::new(registers::Registers::new());
 
-        let mut sut =
-            InstructionExecutor::new(registers::Registers::new(), bin_file::BinFile::new());
+        let mut sut = InstructionExecutor::new(
+            std::sync::Arc::new(registers::Registers::new()),
+            bin_file::BinFile::new(),
+        );
 
         sut.run();
 
@@ -90,10 +95,12 @@ mod tests {
 
     #[test]
     fn test_run_with_falling_edge_notify() {
-        let empty_registers = registers::Registers::new();
+        let empty_registers = std::sync::Arc::new(registers::Registers::new());
 
-        let mut sut =
-            InstructionExecutor::new(registers::Registers::new(), bin_file::BinFile::new());
+        let mut sut = InstructionExecutor::new(
+            std::sync::Arc::new(registers::Registers::new()),
+            bin_file::BinFile::new(),
+        );
 
         sut.notify_falling_edge();
         sut.run();
@@ -103,13 +110,16 @@ mod tests {
 
     #[test]
     fn test_run_with_rising_edge_notify() {
-        let mut expected_registers = registers::Registers::new();
-        expected_registers.pc = 1;
+        let mut expected_registers = std::sync::Arc::new(registers::Registers::new());
+        std::sync::Arc::get_mut(&mut expected_registers).unwrap().pc = 1;
 
         let mut stub_bin_file = bin_file::BinFile::new();
         let _ = stub_bin_file.add_bytes([0, 0], Some(0), true);
 
-        let mut sut = InstructionExecutor::new(registers::Registers::new(), stub_bin_file);
+        let mut sut = InstructionExecutor::new(
+            std::sync::Arc::new(registers::Registers::new()),
+            stub_bin_file,
+        );
 
         sut.notify_rising_edge();
         sut.run();
@@ -119,13 +129,16 @@ mod tests {
 
     #[test]
     fn find_instruction_from_opcode() {
-        let mut expected_registers = registers::Registers::new();
-        expected_registers.pc = 1;
+        let mut expected_registers = std::sync::Arc::new(registers::Registers::new());
+        std::sync::Arc::get_mut(&mut expected_registers).unwrap().pc = 1;
 
         let mut stub_bin_file = bin_file::BinFile::new();
         let _ = stub_bin_file.add_bytes([0, 0], Some(0), true);
 
-        let mut sut = InstructionExecutor::new(registers::Registers::new(), stub_bin_file);
+        let mut sut = InstructionExecutor::new(
+            std::sync::Arc::new(registers::Registers::new()),
+            stub_bin_file,
+        );
 
         sut.notify_rising_edge();
         sut.run();

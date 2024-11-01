@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 pub trait Subscriber: Send + Sync {
     fn notify_rising_edge(&self);
     fn notify_falling_edge(&self);
@@ -6,11 +8,8 @@ pub trait Subscriber: Send + Sync {
 
 pub struct Clock {
     half_cycle_time_s: f64,
-    subscribers: Vec<*const dyn Subscriber>,
+    subscribers: Vec<Arc<Mutex<Box<dyn Subscriber>>>>,
 }
-
-unsafe impl Send for Clock {} //TODO: can it be done better?
-unsafe impl Sync for Clock {} //TODO: can it be done better?
 
 impl Clock {
     pub fn new(frequency_hz: f64) -> Self {
@@ -32,17 +31,17 @@ impl Clock {
 
     fn notify_rising_edge(&self) {
         for subscriber in &self.subscribers {
-            unsafe { subscriber.as_ref().unwrap().notify_rising_edge() }; //TODO: Can it be done better?
+            subscriber.lock().unwrap().notify_rising_edge();
         }
     }
 
     fn notify_falling_edge(&self) {
         for subscriber in &self.subscribers {
-            unsafe { subscriber.as_ref().unwrap().notify_falling_edge() }; //TODO: Can it be done better?
+            subscriber.lock().unwrap().notify_falling_edge();
         }
     }
 
-    pub fn subscribe(&mut self, subscriber: *const dyn Subscriber) {
+    pub fn subscribe(&mut self, subscriber: Arc<Mutex<Box<dyn Subscriber>>>) {
         self.subscribers.push(subscriber);
     }
 }
@@ -50,6 +49,7 @@ impl Clock {
 #[cfg(test)]
 mod tests {
     use super::{Clock, Subscriber};
+    use std::sync::{Arc, Mutex};
 
     struct MockSubscriber {
         pub rising_edge_timestamp_ms: std::sync::atomic::AtomicI64,
@@ -99,16 +99,17 @@ mod tests {
     fn test_run() {
         let requested_frequency_hz = 1.0;
 
-        let mut mock_subscriber = MockSubscriber {
-            rising_edge_timestamp_ms: std::sync::atomic::AtomicI64::new(0),
-            falling_edge_timestamp_ms: std::sync::atomic::AtomicI64::new(0),
-            expected_frequency_hz: requested_frequency_hz,
-        };
+        let mock_subscriber: Arc<Mutex<Box<dyn Subscriber>>> =
+            Arc::new(Mutex::new(Box::new(MockSubscriber {
+                rising_edge_timestamp_ms: std::sync::atomic::AtomicI64::new(0),
+                falling_edge_timestamp_ms: std::sync::atomic::AtomicI64::new(0),
+                expected_frequency_hz: requested_frequency_hz,
+            })));
 
         let mut clock = Clock::new(requested_frequency_hz);
-        clock.subscribe(&mock_subscriber);
+        clock.subscribe(mock_subscriber.clone());
 
         clock.run(); // run single clock cycle
-        mock_subscriber.run(); // check if it was as expected
+        mock_subscriber.lock().unwrap().run(); // check if it was as expected
     }
 }

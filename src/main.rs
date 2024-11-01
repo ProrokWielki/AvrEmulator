@@ -1,8 +1,9 @@
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
-use clock::Subscriber;
 use structopt::StructOpt;
 
+use clock::Subscriber;
 use registers::Registers;
 
 pub mod clock;
@@ -53,16 +54,17 @@ fn main() {
     }
 
     let hex_dump = bin_file::BinFile::from_file(Path::new(&file_path)).unwrap();
+    let registers = Arc::new(Registers::new());
 
-    let mut instruction_executor: Box<dyn Subscriber> = Box::new(
-        instruction_executor::InstructionExecutor::new(Registers::new(), hex_dump),
-    );
+    let instruction_executor: Arc<Mutex<Box<dyn Subscriber>>> = Arc::new(Mutex::new(Box::new(
+        instruction_executor::InstructionExecutor::new(registers.clone(), hex_dump),
+    )));
 
     let mut clock = clock::Clock::new(opt.frequency as f64);
-    clock.subscribe(&*instruction_executor);
+    clock.subscribe(instruction_executor.clone());
 
     let instruction_executor_thread = std::thread::spawn(move || loop {
-        instruction_executor.run();
+        instruction_executor.lock().unwrap().run();
     });
     let clock_thread = std::thread::spawn(move || loop {
         clock.run();
