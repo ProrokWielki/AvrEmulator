@@ -14,6 +14,7 @@ mod i_std_y;
 mod ld_z;
 mod ldd_y;
 mod ldi;
+mod mov;
 mod movw;
 mod nop;
 mod out;
@@ -61,6 +62,7 @@ pub trait Instruction {
     }
 }
 
+//TODO: refactor
 pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     if nop::NOP::eq(opcode) {
         return Some(Box::new(nop::NOP::new(opcode)));
@@ -97,6 +99,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if movw::MOVW::eq(opcode) {
         return Some(Box::new(movw::MOVW::new(opcode)));
+    }
+    if mov::MOV::eq(opcode) {
+        return Some(Box::new(mov::MOV::new(opcode)));
     }
     if subi::SUBI::eq(opcode) {
         return Some(Box::new(subi::SUBI::new(opcode)));
@@ -170,13 +175,13 @@ mod tests {
     }
 
     #[test]
-    fn test_eq_returns_true_for_valid_instraction() {
+    fn test_eq_returns_true_for_valid_instruction() {
         assert!(MockInstruction::eq(0xf0f0));
         assert!(MockInstruction::eq(0xf0ff));
     }
 
     #[test]
-    fn test_eq_returns_false_for_invalid_instraction() {
+    fn test_eq_returns_false_for_invalid_instruction() {
         assert!(!MockInstruction::eq(0x0000));
         assert!(!MockInstruction::eq(0xf000));
         assert!(!MockInstruction::eq(0x00f0));
@@ -184,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn test_extend_return_correct_value_for_positiv_integers() {
+    fn test_extend_return_correct_value_for_positive_integers() {
         assert_eq!(MockInstruction::extend(0x0001, 8), 1);
         assert_eq!(MockInstruction::extend(0x00ff, 9), 255);
         assert_eq!(MockInstruction::extend(0x0003, 4), 3);
@@ -198,27 +203,27 @@ mod tests {
     }
 
     #[test]
-    fn test_get_instruction_retunrs_none_for_invalid_opcode() {
+    fn test_get_instruction_returns_none_for_invalid_opcode() {
         assert!(get_instruction(0xffff).is_none());
     }
 
     #[test]
-    fn test_get_instruction_retunrs_nop_for_nop_opcode() {
+    fn test_get_instruction_returns_nop_for_nop_opcode() {
         assert_eq!(get_instruction(0x0000).unwrap().str(), "nop");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_ret_for_ret_opcode() {
+    fn test_get_instruction_returns_ret_for_ret_opcode() {
         assert_eq!(get_instruction(0b1001_0101_0000_1000).unwrap().str(), "ret");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_rjmp_for_rjmp_opcode() {
+    fn test_get_instruction_returns_rjmp_for_rjmp_opcode() {
         assert_eq!(get_instruction(0xcfff).unwrap().str(), "rjmp -1");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_push_for_push_opcode() {
+    fn test_get_instruction_returns_push_for_push_opcode() {
         let pushed_value = 7;
         assert_eq!(
             get_instruction(push::PUSH::get_instruction_codes()[0] | pushed_value << 4)
@@ -229,122 +234,127 @@ mod tests {
     }
 
     #[test]
-    fn test_get_instruction_retunrs_eor_for_eor_opcode() {
+    fn test_get_instruction_returns_eor_for_eor_opcode() {
         assert_eq!(get_instruction(0x2443).unwrap().str(), "eor r4, r3");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_in_for_in_opcode() {
+    fn test_get_instruction_returns_in_for_in_opcode() {
         assert_eq!(get_instruction(0xb000).unwrap().str(), "in r0, 0");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_out_for_out_opcode() {
+    fn test_get_instruction_returns_out_for_out_opcode() {
         assert_eq!(get_instruction(0xb800).unwrap().str(), "out 0, r0");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_ldi_for_ldi_opcode() {
+    fn test_get_instruction_returns_ldi_for_ldi_opcode() {
         assert_eq!(get_instruction(0xefff).unwrap().str(), "ldi r31, 255");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_rcall_for_rcall_opcode() {
+    fn test_get_instruction_returns_rcall_for_rcall_opcode() {
         assert_eq!(get_instruction(0xdfff).unwrap().str(), "rcall -1");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_std_for_std_opcode() {
+    fn test_get_instruction_returns_std_for_std_opcode() {
         assert_eq!(get_instruction(0x8a08).unwrap().str(), "std y+16, r0");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_ldd_for_ldd_opcode() {
+    fn test_get_instruction_returns_ldd_for_ldd_opcode() {
         assert_eq!(get_instruction(0x8828).unwrap().str(), "ldd r2, y+16");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_movw_for_movw_opcode() {
+    fn test_get_instruction_returns_movw_for_movw_opcode() {
         assert_eq!(get_instruction(0x0112).unwrap().str(), "movw r2, r4");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_subi_for_subi_opcode() {
+    fn test_get_instruction_returns_subi_for_subi_opcode() {
         assert_eq!(get_instruction(0x5032).unwrap().str(), "subi r19, 2");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_sbci_for_sbci_opcode() {
+    fn test_get_instruction_returns_sbci_for_sbci_opcode() {
         assert_eq!(get_instruction(0x4045).unwrap().str(), "sbci r20, 5");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_cp_for_cp_opcode() {
+    fn test_get_instruction_returns_cp_for_cp_opcode() {
         assert_eq!(get_instruction(0x1456).unwrap().str(), "cp r5, r6");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_cpc_for_cpc_opcode() {
+    fn test_get_instruction_returns_cpc_for_cpc_opcode() {
         assert_eq!(get_instruction(0x048c).unwrap().str(), "cpc r8, r12");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_brlt_for_brlt_opcode() {
+    fn test_get_instruction_returns_brlt_for_brlt_opcode() {
         assert_eq!(get_instruction(0xf004).unwrap().str(), "brlt 0");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_sbc_for_sbc_opcode() {
+    fn test_get_instruction_returns_sbc_for_sbc_opcode() {
         assert_eq!(get_instruction(0x089a).unwrap().str(), "sbc r9, r10");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_cpi_for_cpi_opcode() {
+    fn test_get_instruction_returns_cpi_for_cpi_opcode() {
         assert_eq!(get_instruction(0x3012).unwrap().str(), "cpi r17, 2");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_brge_for_brge_opcode() {
+    fn test_get_instruction_returns_brge_for_brge_opcode() {
         assert_eq!(get_instruction(0xf414).unwrap().str(), "brge 2");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_pop_for_pop_opcode() {
+    fn test_get_instruction_returns_pop_for_pop_opcode() {
         assert_eq!(get_instruction(0x90ff).unwrap().str(), "pop r15");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_sbiw_for_sbiw_opcode() {
+    fn test_get_instruction_returns_sbiw_for_sbiw_opcode() {
         assert_eq!(get_instruction(0x9700).unwrap().str(), "sbiw r25:r24, 0");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_breq_for_breq_opcode() {
+    fn test_get_instruction_returns_breq_for_breq_opcode() {
         assert_eq!(get_instruction(0xf001).unwrap().str(), "breq 0");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_brne_for_brne_opcode() {
+    fn test_get_instruction_returns_brne_for_brne_opcode() {
         assert_eq!(get_instruction(0xf401).unwrap().str(), "brne 0");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_ldz_for_ldz_opcode() {
+    fn test_get_instruction_returns_ldz_for_ldz_opcode() {
         assert_eq!(get_instruction(0x8010).unwrap().str(), "ld r1, z");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_sbr_for_sbr_opcode() {
+    fn test_get_instruction_returns_sbr_for_sbr_opcode() {
         assert_eq!(get_instruction(0x6000).unwrap().str(), "sbr r16, 0");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_stz_for_stz_opcode() {
+    fn test_get_instruction_returns_stz_for_stz_opcode() {
         assert_eq!(get_instruction(0x8200).unwrap().str(), "st z, r0");
     }
 
     #[test]
-    fn test_get_instruction_retunrs_bset_for_bset_opcode() {
+    fn test_get_instruction_returns_bset_for_bset_opcode() {
         assert_eq!(get_instruction(0x9408).unwrap().str(), "bset 0");
+    }
+
+    #[test]
+    fn test_get_instruction_returns_mov_for_mov_opcode() {
+        assert_eq!(get_instruction(0x2c01).unwrap().str(), "mov r0, r1");
     }
 }
