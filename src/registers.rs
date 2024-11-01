@@ -1,8 +1,8 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Registers {
     pub r: [u8; 32],
     pub io: [u8; 64],
-    pub stack: [u8; 66000],
+    pub stack: [u8; 66000], //TODO: this should be changed
     pub pc: i32,
     pub sreg_i: bool,
     pub sreg_t: bool,
