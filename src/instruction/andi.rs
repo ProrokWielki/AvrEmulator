@@ -12,7 +12,7 @@ impl Instruction for ANDI {
 
         registers.sreg_v = false;
         registers.sreg_n = (registers.r[self.d as usize] & (1 << 7)) > 0;
-        registers.sreg_z = (registers.r[self.d as usize] == 0);
+        registers.sreg_z = registers.r[self.d as usize] == 0;
         registers.sreg_s = registers.sreg_n != registers.sreg_v;
     }
     fn str(&self) -> String {
