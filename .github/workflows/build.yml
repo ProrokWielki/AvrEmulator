@@ -26,4 +26,4 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v3
     - name: build 
-      run: docker run -v $PWD:/srv -w/srv pawelwarzecha/avr_emulator cargo build
+      run: docker run -v $PWD:/srv -w/srv pawelwarzecha/avr_emulator ~/.cargo/bin/cargo build
