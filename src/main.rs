@@ -54,7 +54,7 @@ fn main() {
     }
 
     let hex_dump = bin_file::BinFile::from_file(Path::new(&file_path)).unwrap();
-    let registers = Arc::new(Registers::new());
+    let registers = Arc::new(Mutex::new(Registers::new()));
 
     let instruction_executor: Arc<Mutex<Box<dyn Subscriber>>> = Arc::new(Mutex::new(Box::new(
         instruction_executor::InstructionExecutor::new(registers.clone(), hex_dump),
