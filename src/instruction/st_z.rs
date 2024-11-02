@@ -8,8 +8,15 @@ impl Instruction for STZ {
     fn process(&self, registers: &mut Registers) {
         registers.pc += 1;
 
-        registers.stack[registers.z() as usize] = registers.r[self.d as usize];
+        if registers.z() < 32 {
+            registers.r[registers.z() as usize] = registers.r[self.d as usize];
+        } else if registers.z() < 32 + 64 {
+            registers.io[(registers.z() - 32) as usize] = registers.r[(self.d) as usize];
+        } else {
+            registers.stack[(registers.z() - (32 + 64)) as usize] = registers.r[self.d as usize];
+        }
     }
+
     fn str(&self) -> String {
         return format!("st z, r{}", self.d).to_owned();
     }
@@ -37,7 +44,7 @@ mod tests {
     use super::STZ;
 
     #[test]
-    fn test_process_same_register() {
+    fn test_process_register() {
         let z_pointing_address = 20;
         let register_value = 150;
         let source_register = 15;
@@ -48,7 +55,51 @@ mod tests {
 
         let mut expected_registers = Registers::new();
         expected_registers.pc = 1;
-        expected_registers.stack[z_pointing_address as usize] = register_value;
+        expected_registers.r[z_pointing_address as usize] = register_value;
+        expected_registers.r[source_register as usize] = register_value;
+        expected_registers.set_z(z_pointing_address);
+
+        let stz = STZ::new(0x8000 | (source_register << 4) as u16);
+        stz.process(&mut test_registers);
+
+        assert_eq!(test_registers, expected_registers);
+    }
+
+    #[test]
+    fn test_process_io() {
+        let z_pointing_address = 64;
+        let register_value = 150;
+        let source_register = 15;
+
+        let mut test_registers = Registers::new();
+        test_registers.r[(source_register) as usize] = register_value;
+        test_registers.set_z(z_pointing_address);
+
+        let mut expected_registers = Registers::new();
+        expected_registers.pc = 1;
+        expected_registers.io[(z_pointing_address - 32) as usize] = register_value;
+        expected_registers.r[source_register as usize] = register_value;
+        expected_registers.set_z(z_pointing_address);
+
+        let stz = STZ::new(0x8000 | (source_register << 4) as u16);
+        stz.process(&mut test_registers);
+
+        assert_eq!(test_registers, expected_registers);
+    }
+
+    #[test]
+    fn test_process_stack() {
+        let z_pointing_address = 256;
+        let register_value = 150;
+        let source_register = 15;
+
+        let mut test_registers = Registers::new();
+        test_registers.r[source_register as usize] = register_value;
+        test_registers.set_z(z_pointing_address);
+
+        let mut expected_registers = Registers::new();
+        expected_registers.pc = 1;
+        expected_registers.stack[(z_pointing_address - (32 + 64)) as usize] = register_value;
         expected_registers.r[source_register as usize] = register_value;
         expected_registers.set_z(z_pointing_address);
 

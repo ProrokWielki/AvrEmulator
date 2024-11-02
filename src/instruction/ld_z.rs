@@ -8,8 +8,15 @@ impl Instruction for LDZ {
     fn process(&self, registers: &mut Registers) {
         registers.pc += 1;
 
-        registers.r[self.d as usize] = registers.stack[registers.z() as usize];
+        if registers.z() < 32 {
+            registers.r[self.d as usize] = registers.r[registers.z() as usize];
+        } else if registers.z() < 32 + 64 {
+            registers.r[self.d as usize] = registers.io[(registers.z() - 32) as usize];
+        } else {
+            registers.r[self.d as usize] = registers.stack[(registers.z() - (32 + 64)) as usize];
+        }
     }
+
     fn str(&self) -> String {
         return format!("ld r{}, z", self.d).to_owned();
     }
@@ -37,21 +44,67 @@ mod tests {
     use super::LDZ;
 
     #[test]
-    fn test_process_same_register() {
+    fn test_process_register() {
         let z_pointing_address = 20;
         let z_value = 150;
         let destination_register = 15;
 
         let mut test_registers = Registers::new();
-        test_registers.stack[z_pointing_address as usize] = z_value;
+        test_registers.r[z_pointing_address as usize] = z_value;
         test_registers.set_z(z_pointing_address);
 
         let mut expected_registers = Registers::new();
         expected_registers.pc = 1;
-        expected_registers.stack[z_pointing_address as usize] = z_value;
+        expected_registers.r[z_pointing_address as usize] = z_value;
         expected_registers.set_z(z_pointing_address);
         expected_registers.r[destination_register as usize] =
-            expected_registers.stack[z_pointing_address as usize];
+            expected_registers.r[z_pointing_address as usize];
+
+        let ldz = LDZ::new(0x8000 | (destination_register << 4) as u16);
+        ldz.process(&mut test_registers);
+
+        assert_eq!(test_registers, expected_registers);
+    }
+
+    #[test]
+    fn test_process_io() {
+        let z_pointing_address = 64;
+        let z_value = 150;
+        let destination_register = 15;
+
+        let mut test_registers = Registers::new();
+        test_registers.io[(z_pointing_address - 32) as usize] = z_value;
+        test_registers.set_z(z_pointing_address);
+
+        let mut expected_registers = Registers::new();
+        expected_registers.pc = 1;
+        expected_registers.io[(z_pointing_address - 32) as usize] = z_value;
+        expected_registers.set_z(z_pointing_address);
+        expected_registers.r[destination_register as usize] =
+            expected_registers.io[(z_pointing_address - 32) as usize];
+
+        let ldz = LDZ::new(0x8000 | (destination_register << 4) as u16);
+        ldz.process(&mut test_registers);
+
+        assert_eq!(test_registers, expected_registers);
+    }
+
+    #[test]
+    fn test_process_stack() {
+        let z_pointing_address = 256;
+        let z_value = 150;
+        let destination_register = 15;
+
+        let mut test_registers = Registers::new();
+        test_registers.stack[(z_pointing_address - (32 + 64)) as usize] = z_value;
+        test_registers.set_z(z_pointing_address);
+
+        let mut expected_registers = Registers::new();
+        expected_registers.pc = 1;
+        expected_registers.stack[(z_pointing_address - (32 + 64)) as usize] = z_value;
+        expected_registers.set_z(z_pointing_address);
+        expected_registers.r[destination_register as usize] =
+            expected_registers.stack[(z_pointing_address - (32 + 64)) as usize];
 
         let ldz = LDZ::new(0x8000 | (destination_register << 4) as u16);
         ldz.process(&mut test_registers);
