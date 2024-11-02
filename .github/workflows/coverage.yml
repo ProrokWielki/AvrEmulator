@@ -28,4 +28,4 @@ jobs:
     - name: Push to coveralls.io
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-      run: docker run --security-opt seccomp=unconfined -v $PWD:/srv -w/srv pawelwarzecha/avr_emulator:latest sh -c "git config --global --add safe.directory /srv && ~/.cargo/bin/cargo tarpaulin --no-fail-fast --coveralls $COVERALLS_REPO_TOKEN || echo"
+      run: docker run --security-opt seccomp=unconfined -v $PWD:/srv -w/srv pawelwarzecha/avr_emulator:latest sh -c "git config --global --add safe.directory /srv && /root/.cargo/bin/cargo tarpaulin --no-fail-fast --coveralls $COVERALLS_REPO_TOKEN || echo"
