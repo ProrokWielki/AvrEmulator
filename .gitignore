@@ -1,8 +1,17 @@
+# rust output
 /target
 
+# pytest files
 __pycache__
 .pytests_cache
 
+# integration tests output
 /tests/**/build/
 
+# tarpaulin output
 tarpaulin-report.html
+
+# profiling files
+perf.data
+perf.data.old
+flamegraph.svg
