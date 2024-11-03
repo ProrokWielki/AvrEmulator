@@ -64,3 +64,13 @@ fn test_if_statements() {
     assert!(TestFixture::call_make());
     assert!(TestFixture::run_tests());
 }
+
+#[test]
+#[serial_test::serial]
+fn test_timer_register_check() {
+    TestFixture::set_up("timer_register_check".to_owned());
+
+    assert!(TestFixture::prepare_cmake());
+    assert!(TestFixture::call_make());
+    assert!(TestFixture::run_tests());
+}
