@@ -10,6 +10,7 @@ pub mod clock;
 pub mod instruction;
 pub mod instruction_executor;
 pub mod registers;
+pub mod timer;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "AVRSimulator", about = "allows running avr hex")]
@@ -60,8 +61,13 @@ fn main() {
         instruction_executor::InstructionExecutor::new(registers.clone(), hex_dump),
     )));
 
+    let timer: Arc<Mutex<Box<dyn Subscriber>>> =
+        Arc::new(Mutex::new(Box::new(timer::Timer::new(registers.clone()))));
+
     let mut clock = clock::Clock::new(opt.frequency as f64);
+
     clock.subscribe(instruction_executor.clone());
+    clock.subscribe(timer.clone());
 
     let instruction_executor_thread = std::thread::spawn(move || loop {
         instruction_executor.lock().unwrap().run();
@@ -69,7 +75,11 @@ fn main() {
     let clock_thread = std::thread::spawn(move || loop {
         clock.run();
     });
+    let timer_thread = std::thread::spawn(move || loop {
+        timer.lock().unwrap().run();
+    });
 
     instruction_executor_thread.join().unwrap();
     clock_thread.join().unwrap();
+    timer_thread.join().unwrap();
 }
