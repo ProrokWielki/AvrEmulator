@@ -2,25 +2,25 @@ use std::sync::{Arc, Mutex};
 
 use crate::clock;
 use crate::instruction;
-use crate::registers;
+use crate::memory::Memory;
 
 pub struct InstructionExecutor {
     rising_edge_notified: std::sync::atomic::AtomicBool,
-    registers: Arc<Mutex<registers::Registers>>,
+    memory: Arc<Mutex<Memory>>,
     hex_dump: bin_file::BinFile,
 }
 
 impl InstructionExecutor {
-    pub fn new(registers: Arc<Mutex<registers::Registers>>, hex_dump: bin_file::BinFile) -> Self {
+    pub fn new(memory: Arc<Mutex<Memory>>, hex_dump: bin_file::BinFile) -> Self {
         Self {
             rising_edge_notified: std::sync::atomic::AtomicBool::new(false),
-            registers: registers,
+            memory: memory,
             hex_dump: hex_dump,
         }
     }
 
     fn get_current_instruction_opcode(&self) -> u16 {
-        let offset = (self.registers.lock().unwrap().pc * 2) as usize;
+        let offset = (self.memory.lock().unwrap().pc * 2) as usize;
 
         let a = self.hex_dump.get_value_by_address(offset).unwrap() as u16;
         let b = self.hex_dump.get_value_by_address(offset + 1).unwrap() as u16;
@@ -65,7 +65,7 @@ impl<'a> clock::Subscriber for InstructionExecutor {
         {
             let current_instruction_opcode = self.get_current_instruction_opcode();
             let current_instruction = self.find_instruction_from_opcode(current_instruction_opcode);
-            current_instruction.process(&mut self.registers.lock().unwrap());
+            current_instruction.process(&mut self.memory.lock().unwrap());
 
             self.rising_edge_notified
                 .store(false, std::sync::atomic::Ordering::Relaxed);
@@ -81,10 +81,10 @@ mod tests {
 
     #[test]
     fn test_run_without_notify() {
-        let empty_registers = Arc::new(Mutex::new(registers::Registers::new()));
+        let empty_registers = Arc::new(Mutex::new(Memory::new(100).unwrap()));
 
         let mut sut = InstructionExecutor::new(
-            Arc::new(Mutex::new(registers::Registers::new())),
+            Arc::new(Mutex::new(Memory::new(100).unwrap())),
             bin_file::BinFile::new(),
         );
 
@@ -92,16 +92,16 @@ mod tests {
 
         assert_eq!(
             *empty_registers.lock().unwrap(),
-            *sut.registers.lock().unwrap()
+            *sut.memory.lock().unwrap()
         );
     }
 
     #[test]
     fn test_run_with_falling_edge_notify() {
-        let empty_registers = Arc::new(Mutex::new(registers::Registers::new()));
+        let empty_registers = Arc::new(Mutex::new(Memory::new(100).unwrap()));
 
         let mut sut = InstructionExecutor::new(
-            Arc::new(Mutex::new(registers::Registers::new())),
+            Arc::new(Mutex::new(Memory::new(100).unwrap())),
             bin_file::BinFile::new(),
         );
 
@@ -110,20 +110,20 @@ mod tests {
 
         assert_eq!(
             *empty_registers.lock().unwrap(),
-            *sut.registers.lock().unwrap()
+            *sut.memory.lock().unwrap()
         );
     }
 
     #[test]
     fn test_run_with_rising_edge_notify() {
-        let expected_registers = Arc::new(Mutex::new(registers::Registers::new()));
+        let expected_registers = Arc::new(Mutex::new(Memory::new(100).unwrap()));
         expected_registers.lock().unwrap().pc = 1;
 
         let mut stub_bin_file = bin_file::BinFile::new();
         let _ = stub_bin_file.add_bytes([0, 0], Some(0), true);
 
         let mut sut = InstructionExecutor::new(
-            Arc::new(Mutex::new(registers::Registers::new())),
+            Arc::new(Mutex::new(Memory::new(100).unwrap())),
             stub_bin_file,
         );
 
@@ -132,20 +132,20 @@ mod tests {
 
         assert_eq!(
             *expected_registers.lock().unwrap(),
-            *sut.registers.lock().unwrap()
+            *sut.memory.lock().unwrap()
         );
     }
 
     #[test]
     fn find_instruction_from_opcode() {
-        let expected_registers = Arc::new(Mutex::new(registers::Registers::new()));
+        let expected_registers = Arc::new(Mutex::new(Memory::new(100).unwrap()));
         expected_registers.lock().unwrap().pc = 1;
 
         let mut stub_bin_file = bin_file::BinFile::new();
         let _ = stub_bin_file.add_bytes([0, 0], Some(0), true);
 
         let mut sut = InstructionExecutor::new(
-            Arc::new(Mutex::new(registers::Registers::new())),
+            Arc::new(Mutex::new(Memory::new(100).unwrap())),
             stub_bin_file,
         );
 
@@ -154,7 +154,7 @@ mod tests {
 
         assert_eq!(
             *expected_registers.lock().unwrap(),
-            *sut.registers.lock().unwrap()
+            *sut.memory.lock().unwrap()
         );
     }
 }

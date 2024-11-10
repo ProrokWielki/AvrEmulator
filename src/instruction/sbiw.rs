@@ -1,4 +1,4 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct SBIW {
     d: u8,
@@ -6,15 +6,18 @@ pub struct SBIW {
 }
 
 impl Instruction for SBIW {
-    fn process(&self, registers: &mut Registers) {
-        registers.pc += 1;
+    fn process(&self, memory: &mut Memory) {
+        memory.pc += 1;
 
-        let result = registers.as_16bit(self.d as usize).wrapping_sub(self.k);
-        let rd = registers.as_16bit(self.d as usize);
+        let result = memory
+            .get_as_16bit(self.d as usize)
+            .unwrap()
+            .wrapping_sub(self.k);
+        let rd = memory.get_as_16bit(self.d as usize).unwrap();
 
-        registers.update_sreg_16bit(rd, self.k, result);
+        memory.update_sreg_16bit(rd, self.k, result);
 
-        registers.set_as_16bit(self.d as usize, result);
+        memory.set_as_16bit(self.d as usize, result);
     }
     fn str(&self) -> String {
         return format!("sbiw r{}:r{}, {}", self.d + 1, self.d, self.k).to_owned();
@@ -42,7 +45,7 @@ impl SBIW {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory, memory::SregBit};
 
     use super::SBIW;
 
@@ -52,13 +55,13 @@ mod tests {
         let source_value = 400;
         let constant_value = 10;
 
-        let mut test_registers = Registers::new();
+        let mut test_registers = Memory::new(100).unwrap();
         test_registers.set_as_16bit(
             SBIW::POSSIBLE_D[source_register as usize] as usize,
             source_value,
         );
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(100).unwrap();
         expected_registers.set_as_16bit(
             SBIW::POSSIBLE_D[source_register as usize] as usize,
             source_value - constant_value,
@@ -82,19 +85,19 @@ mod tests {
         let source_value = 63;
         let constant_value = 63;
 
-        let mut test_registers = Registers::new();
+        let mut test_registers = Memory::new(100).unwrap();
         test_registers.set_as_16bit(
             SBIW::POSSIBLE_D[source_register as usize] as usize,
             source_value,
         );
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(100).unwrap();
         expected_registers.set_as_16bit(
             SBIW::POSSIBLE_D[source_register as usize] as usize,
             source_value - constant_value,
         );
         expected_registers.pc = 1;
-        expected_registers.sreg_z = true;
+        expected_registers.set_status_register_bit(SregBit::Z);
 
         let sbiw = SBIW::new(
             (0x9700 as u16
@@ -113,21 +116,21 @@ mod tests {
         let source_value = 5;
         let constant_value = 10;
 
-        let mut test_registers = Registers::new();
+        let mut test_registers = Memory::new(100).unwrap();
         test_registers.set_as_16bit(
             SBIW::POSSIBLE_D[source_register as usize] as usize,
             source_value,
         );
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(100).unwrap();
         expected_registers.set_as_16bit(
             SBIW::POSSIBLE_D[source_register as usize] as usize,
             source_value.wrapping_sub(constant_value),
         );
         expected_registers.pc = 1;
-        expected_registers.sreg_c = true;
-        expected_registers.sreg_v = true;
-        expected_registers.sreg_n = true;
+        expected_registers.set_status_register_bit(SregBit::C);
+        expected_registers.set_status_register_bit(SregBit::V);
+        expected_registers.set_status_register_bit(SregBit::N);
 
         let sbiw = SBIW::new(
             (0x9700 as u16

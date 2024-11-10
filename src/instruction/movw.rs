@@ -1,4 +1,4 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct MOVW {
     pc: i32,
@@ -7,9 +7,12 @@ pub struct MOVW {
 }
 
 impl Instruction for MOVW {
-    fn process(&self, registers: &mut Registers) {
-        registers.pc += self.pc;
-        registers.set_as_16bit(self.d.into(), registers.as_16bit(self.r as usize).into());
+    fn process(&self, memory: &mut Memory) {
+        memory.pc += self.pc;
+        memory.set_as_16bit(
+            self.d.into(),
+            memory.get_as_16bit(self.r as usize).unwrap().into(),
+        );
     }
     fn str(&self) -> String {
         return format!("movw r{}, r{}", self.d, self.r).to_owned();
@@ -34,7 +37,7 @@ impl MOVW {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory};
 
     use super::MOVW;
 
@@ -44,15 +47,15 @@ mod tests {
         let source_register: u16 = 15;
         let data = 15;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[(source_register * 2) as usize] = data;
-        test_registers.r[((source_register * 2) + 1) as usize] = data + 1;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register((source_register * 2) as usize, data);
+        test_registers.set_register(((source_register * 2) + 1) as usize, data + 1);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[(source_register * 2) as usize] = data;
-        expected_registers.r[((source_register * 2) + 1) as usize] = data + 1;
-        expected_registers.r[(destnation_register * 2) as usize] = data;
-        expected_registers.r[((destnation_register * 2) + 1) as usize] = data + 1;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_register((source_register * 2) as usize, data);
+        expected_registers.set_register(((source_register * 2) + 1) as usize, data + 1);
+        expected_registers.set_register((destnation_register * 2) as usize, data);
+        expected_registers.set_register(((destnation_register * 2) + 1) as usize, data + 1);
         expected_registers.pc = 1;
 
         let movw = MOVW::new(0xe000 | destnation_register << 4 | source_register);

@@ -1,12 +1,12 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct RJMP {
     k: i32,
 }
 
 impl Instruction for RJMP {
-    fn process(&self, registers: &mut Registers) {
-        registers.pc += 1 + self.k;
+    fn process(&self, memory: &mut Memory) {
+        memory.pc += 1 + self.k;
     }
     fn str(&self) -> String {
         return format!("rjmp {}", self.k).to_owned();
@@ -29,15 +29,15 @@ impl RJMP {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory};
 
     use super::RJMP;
 
     #[test]
     fn test_process_positive_k() {
-        let mut test_registers = Registers::new();
+        let mut test_registers = Memory::new(100).unwrap();
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(100).unwrap();
         expected_registers.pc = 2;
 
         let nop = RJMP::new(0xf001);
@@ -48,9 +48,9 @@ mod tests {
 
     #[test]
     fn test_process_negative_k() {
-        let mut test_registers = Registers::new();
+        let mut test_registers = Memory::new(100).unwrap();
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(100).unwrap();
         expected_registers.pc = -1;
 
         let nop = RJMP::new(0xcffe);

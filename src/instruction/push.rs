@@ -1,14 +1,17 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct PUSH {
     r: u16,
 }
 
 impl Instruction for PUSH {
-    fn process(&self, registers: &mut Registers) {
-        registers.stack[registers.sp() as usize] = (registers.r[self.r as usize]) as u8;
-        registers.set_sp(registers.sp() - 1);
-        registers.pc += 1
+    fn process(&self, memory: &mut Memory) {
+        memory.set_stack(
+            memory.get_sp() as usize,
+            memory.get_register(self.r as usize).unwrap(),
+        );
+        memory.set_sp(memory.get_sp() - 1);
+        memory.pc += 1
     }
     fn str(&self) -> String {
         return format!("push r{}", self.r).to_owned();
@@ -31,7 +34,7 @@ impl PUSH {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory};
 
     use super::PUSH;
 
@@ -42,21 +45,19 @@ mod tests {
         let register: u16 = 5;
         let register_value = 15;
 
-        let mut test_registers = Registers::new();
+        let mut test_registers = Memory::new(500).unwrap();
         test_registers.set_sp(start_sp);
-        test_registers.r[register as usize] = register_value;
+        test_registers.set_register(register as usize, register_value);
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(500).unwrap();
         expected_registers.set_sp(expected_sp);
-        expected_registers.stack[start_sp as usize] = register_value as u8;
+        expected_registers.set_stack(start_sp as usize, register_value as u8);
         expected_registers.pc = 1;
 
         let push = PUSH::new(PUSH::get_instruction_codes()[0] | register << 4);
         push.process(&mut test_registers);
 
-        assert_eq!(test_registers.pc, test_registers.pc);
-        assert_eq!(test_registers.sp(), test_registers.sp());
-        assert_eq!(test_registers.stack, test_registers.stack);
+        assert_eq!(test_registers, test_registers);
     }
 
     #[test]

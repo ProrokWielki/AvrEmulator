@@ -1,10 +1,10 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct NOP {}
 
 impl Instruction for NOP {
-    fn process(&self, registers: &mut Registers) {
-        registers.pc += 1;
+    fn process(&self, memory: &mut Memory) {
+        memory.pc += 1;
     }
     fn str(&self) -> String {
         return "nop".to_owned();
@@ -25,15 +25,15 @@ impl NOP {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory};
 
     use super::NOP;
 
     #[test]
     fn test_process() {
-        let mut test_registers = Registers::new();
+        let mut test_registers = Memory::new(100).unwrap();
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(100).unwrap();
         expected_registers.pc = 1;
 
         let nop = NOP::new(0x0000);

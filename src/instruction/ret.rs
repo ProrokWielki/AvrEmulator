@@ -1,11 +1,11 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct RET {}
 
 impl Instruction for RET {
-    fn process(&self, registers: &mut Registers) {
-        registers.set_sp(registers.sp() + 2);
-        registers.pc = registers.stack[registers.sp() as usize] as i32;
+    fn process(&self, memory: &mut Memory) {
+        memory.set_sp(memory.get_sp() + 2);
+        memory.pc = memory.get_stack(memory.get_sp() as usize).unwrap() as i32;
     }
     fn str(&self) -> String {
         return format!("ret").to_owned();
@@ -26,7 +26,7 @@ impl RET {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory};
 
     use super::RET;
 
@@ -36,19 +36,19 @@ mod tests {
         let expected_sp = start_sp + 2;
         let expected_pc: i32 = 13;
 
-        let mut test_registers = Registers::new();
+        let mut test_registers = Memory::new(200).unwrap();
         test_registers.set_sp(start_sp);
-        test_registers.stack[expected_sp as usize] = expected_pc as u8;
+        test_registers.set_stack(expected_sp as usize, expected_pc as u8);
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(200).unwrap();
         expected_registers.pc = expected_pc;
         expected_registers.set_sp(expected_sp);
+        expected_registers.set_stack(expected_sp as usize, expected_pc as u8);
 
         let ret = RET::new(0b1001_0101_0000_1000);
         ret.process(&mut test_registers);
 
-        assert_eq!(test_registers.io, expected_registers.io);
-        assert_eq!(test_registers.pc, expected_registers.pc);
+        assert_eq!(test_registers, expected_registers);
     }
 
     #[test]

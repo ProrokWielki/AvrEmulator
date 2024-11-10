@@ -1,20 +1,16 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct STZ {
     d: u16,
 }
 
 impl Instruction for STZ {
-    fn process(&self, registers: &mut Registers) {
-        registers.pc += 1;
-
-        if registers.z() < 32 {
-            registers.r[registers.z() as usize] = registers.r[self.d as usize];
-        } else if registers.z() < 32 + 64 {
-            registers.io[(registers.z() - 32) as usize] = registers.r[(self.d) as usize];
-        } else {
-            registers.stack[(registers.z() - (32 + 64)) as usize] = registers.r[self.d as usize];
-        }
+    fn process(&self, memory: &mut Memory) {
+        memory.pc += 1;
+        memory.set_sram(
+            memory.get_z_register() as usize,
+            memory.get_register(self.d as usize).unwrap(),
+        )
     }
 
     fn str(&self) -> String {
@@ -39,7 +35,7 @@ impl STZ {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory};
 
     use super::STZ;
 
@@ -49,15 +45,15 @@ mod tests {
         let register_value = 150;
         let source_register = 15;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[source_register as usize] = register_value;
-        test_registers.set_z(z_pointing_address);
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(source_register as usize, register_value);
+        test_registers.set_z_register(z_pointing_address);
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(100).unwrap();
         expected_registers.pc = 1;
-        expected_registers.r[z_pointing_address as usize] = register_value;
-        expected_registers.r[source_register as usize] = register_value;
-        expected_registers.set_z(z_pointing_address);
+        expected_registers.set_register(z_pointing_address as usize, register_value);
+        expected_registers.set_register(source_register as usize, register_value);
+        expected_registers.set_z_register(z_pointing_address);
 
         let stz = STZ::new(0x8000 | (source_register << 4) as u16);
         stz.process(&mut test_registers);
@@ -71,15 +67,15 @@ mod tests {
         let register_value = 150;
         let source_register = 15;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[(source_register) as usize] = register_value;
-        test_registers.set_z(z_pointing_address);
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(source_register as usize, register_value);
+        test_registers.set_z_register(z_pointing_address);
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(100).unwrap();
         expected_registers.pc = 1;
-        expected_registers.io[(z_pointing_address - 32) as usize] = register_value;
-        expected_registers.r[source_register as usize] = register_value;
-        expected_registers.set_z(z_pointing_address);
+        expected_registers.set_io((z_pointing_address - 32) as usize, register_value);
+        expected_registers.set_register(source_register as usize, register_value);
+        expected_registers.set_z_register(z_pointing_address);
 
         let stz = STZ::new(0x8000 | (source_register << 4) as u16);
         stz.process(&mut test_registers);
@@ -93,15 +89,15 @@ mod tests {
         let register_value = 150;
         let source_register = 15;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[source_register as usize] = register_value;
-        test_registers.set_z(z_pointing_address);
+        let mut test_registers = Memory::new(500).unwrap();
+        test_registers.set_register(source_register as usize, register_value);
+        test_registers.set_z_register(z_pointing_address);
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(500).unwrap();
         expected_registers.pc = 1;
-        expected_registers.stack[(z_pointing_address - (32 + 64)) as usize] = register_value;
-        expected_registers.r[source_register as usize] = register_value;
-        expected_registers.set_z(z_pointing_address);
+        expected_registers.set_sram((z_pointing_address) as usize, register_value);
+        expected_registers.set_register(source_register as usize, register_value);
+        expected_registers.set_z_register(z_pointing_address);
 
         let stz = STZ::new(0x8000 | (source_register << 4) as u16);
         stz.process(&mut test_registers);

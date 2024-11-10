@@ -1,14 +1,17 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct POP {
     d: u8,
 }
 
 impl Instruction for POP {
-    fn process(&self, registers: &mut Registers) {
-        registers.set_sp(registers.sp() + 1);
-        registers.r[self.d as usize] = registers.stack[registers.sp() as usize];
-        registers.pc += 1;
+    fn process(&self, memory: &mut Memory) {
+        memory.set_sp(memory.get_sp() + 1);
+        memory.set_register(
+            self.d as usize,
+            memory.get_stack(memory.get_sp() as usize).unwrap(),
+        );
+        memory.pc += 1;
     }
     fn str(&self) -> String {
         return format!("pop r{}", self.d).to_owned();
@@ -31,7 +34,7 @@ impl POP {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory};
 
     use super::POP;
 
@@ -41,14 +44,14 @@ mod tests {
         let stack_value = 50;
         let start_sp = 10;
 
-        let mut test_registers = Registers::new();
+        let mut test_registers = Memory::new(500).unwrap();
         test_registers.set_sp(start_sp);
-        test_registers.stack[(start_sp + 1) as usize] = stack_value;
+        test_registers.set_stack((start_sp + 1) as usize, stack_value);
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(500).unwrap();
         expected_registers.set_sp(start_sp + 1);
-        expected_registers.r[register as usize] = stack_value;
-        expected_registers.stack[(start_sp + 1) as usize] = stack_value;
+        expected_registers.set_register(register as usize, stack_value);
+        expected_registers.set_stack((start_sp + 1) as usize, stack_value);
         expected_registers.pc = 1;
 
         let pop = POP::new(0x900f | register << 4);

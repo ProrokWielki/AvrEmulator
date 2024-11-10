@@ -1,15 +1,16 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory, memory::SregBit};
 
 pub struct BRLT {
     k: i32,
 }
 
 impl Instruction for BRLT {
-    fn process(&self, registers: &mut Registers) {
-        registers.pc += 1;
+    fn process(&self, memory: &mut Memory) {
+        memory.pc += 1;
 
-        if registers.sreg_n != registers.sreg_v {
-            registers.pc += self.k;
+        if memory.get_status_register_bit(SregBit::N) != memory.get_status_register_bit(SregBit::V)
+        {
+            memory.pc += self.k;
         }
     }
     fn str(&self) -> String {
@@ -33,7 +34,7 @@ impl BRLT {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory, memory::SregBit};
 
     use super::BRLT;
 
@@ -41,13 +42,13 @@ mod tests {
     fn test_process_true() {
         let k = 7;
 
-        let mut test_registers = Registers::new();
-        test_registers.sreg_n = true;
-        test_registers.sreg_v = false;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_status_register_bit(SregBit::N);
+        test_registers.clear_status_register_bit(SregBit::V);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.sreg_n = true;
-        expected_registers.sreg_v = false;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_status_register_bit(SregBit::N);
+        expected_registers.clear_status_register_bit(SregBit::V);
         expected_registers.pc = 1 + k;
 
         let brlt = BRLT::new(0xf004 | (k << 3) as u16);
@@ -60,13 +61,13 @@ mod tests {
     fn test_process_false() {
         let k = 7;
 
-        let mut test_registers = Registers::new();
-        test_registers.sreg_n = true;
-        test_registers.sreg_v = true;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_status_register_bit(SregBit::N);
+        test_registers.set_status_register_bit(SregBit::V);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.sreg_n = true;
-        expected_registers.sreg_v = true;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_status_register_bit(SregBit::N);
+        expected_registers.set_status_register_bit(SregBit::V);
         expected_registers.pc = 1;
 
         let brlt = BRLT::new(0xf004 | (k << 3) as u16);

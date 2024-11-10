@@ -1,4 +1,4 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory, memory::SregBit};
 
 pub struct BRBS {
     s: u8,
@@ -6,25 +6,25 @@ pub struct BRBS {
 }
 
 impl Instruction for BRBS {
-    fn process(&self, registers: &mut Registers) {
-        registers.pc += 1;
+    fn process(&self, memory: &mut Memory) {
+        memory.pc += 1;
 
         let mut bit_set = false;
 
         match self.s {
-            0 => bit_set = registers.sreg_c,
-            1 => bit_set = registers.sreg_z,
-            2 => bit_set = registers.sreg_n,
-            3 => bit_set = registers.sreg_v,
-            4 => bit_set = registers.sreg_s,
-            5 => bit_set = registers.sreg_h,
-            6 => bit_set = registers.sreg_t,
-            7 => bit_set = registers.sreg_i,
+            0 => bit_set = memory.get_status_register_bit(SregBit::C),
+            1 => bit_set = memory.get_status_register_bit(SregBit::Z),
+            2 => bit_set = memory.get_status_register_bit(SregBit::N),
+            3 => bit_set = memory.get_status_register_bit(SregBit::V),
+            4 => bit_set = memory.get_status_register_bit(SregBit::S),
+            5 => bit_set = memory.get_status_register_bit(SregBit::H),
+            6 => bit_set = memory.get_status_register_bit(SregBit::T),
+            7 => bit_set = memory.get_status_register_bit(SregBit::I),
             _ => (),
         }
 
         if bit_set {
-            registers.pc += self.k;
+            memory.pc += self.k;
         }
     }
     fn str(&self) -> String {
@@ -50,7 +50,7 @@ impl BRBS {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory, memory::SregBit};
 
     use super::BRBS;
 
@@ -59,12 +59,12 @@ mod tests {
         let sreg_bit = 5;
         let k = 15;
 
-        let mut test_registers = Registers::new();
-        test_registers.sreg_h = true;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_status_register_bit(SregBit::H);
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(100).unwrap();
         expected_registers.pc = 1 + k;
-        expected_registers.sreg_h = true;
+        expected_registers.set_status_register_bit(SregBit::H);
 
         let brbs = BRBS::new((0xf000 | (k << 3) | (sreg_bit)) as u16);
         brbs.process(&mut test_registers);

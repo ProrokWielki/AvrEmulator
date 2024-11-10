@@ -1,4 +1,4 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct LDI {
     d: u16,
@@ -6,9 +6,9 @@ pub struct LDI {
 }
 
 impl Instruction for LDI {
-    fn process(&self, registers: &mut Registers) {
-        registers.pc += 1;
-        registers.r[self.d as usize] = self.k as u8
+    fn process(&self, memory: &mut Memory) {
+        memory.pc += 1;
+        memory.set_register(self.d as usize, self.k as u8);
     }
     fn str(&self) -> String {
         return format!("ldi r{}, {}", self.d, self.k).to_owned();
@@ -32,7 +32,7 @@ impl LDI {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory};
 
     use super::LDI;
 
@@ -41,10 +41,10 @@ mod tests {
         let destnation_register: u16 = 7;
         let data: u16 = 15;
 
-        let mut test_registers = Registers::new();
+        let mut test_registers = Memory::new(100).unwrap();
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[(destnation_register + 16) as usize] = data as u8;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_register((destnation_register + 16) as usize, data as u8);
         expected_registers.pc = 1;
 
         let ldi = LDI::new(0xe000 | destnation_register << 4 | data);

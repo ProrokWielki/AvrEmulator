@@ -1,4 +1,4 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory, memory::SregBit};
 
 pub struct SBC {
     d: u8,
@@ -6,20 +6,26 @@ pub struct SBC {
 }
 
 impl Instruction for SBC {
-    fn process(&self, registers: &mut Registers) {
-        let result = registers.r[self.d as usize]
-            .wrapping_sub(registers.r[self.r as usize])
-            .wrapping_sub(if registers.sreg_c { 1 } else { 0 });
+    fn process(&self, memory: &mut Memory) {
+        let result = memory
+            .get_register(self.d as usize)
+            .unwrap()
+            .wrapping_sub(memory.get_register(self.r as usize).unwrap())
+            .wrapping_sub(if memory.get_status_register_bit(SregBit::C) {
+                1
+            } else {
+                0
+            });
 
-        registers.pc += 1;
+        memory.pc += 1;
 
-        registers.update_sreg_keep_z_if_resoult_zero(
-            registers.r[self.d as usize],
-            registers.r[self.r as usize],
+        memory.update_sreg_keep_z_if_result_zero(
+            memory.get_register(self.d as usize).unwrap(),
+            memory.get_register(self.r as usize).unwrap(),
             result,
         );
 
-        registers.r[self.d as usize] = result;
+        memory.set_register(self.d as usize, result);
     }
     fn str(&self) -> String {
         return format!("sbc r{}, r{}", self.d, self.r).to_owned();
@@ -43,7 +49,7 @@ impl SBC {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory, memory::SregBit};
 
     use super::SBC;
 
@@ -54,13 +60,13 @@ mod tests {
         let rhs_register = 30;
         let rhs_value = 18;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[lhs_register as usize] = lhs_value;
-        test_registers.r[rhs_register as usize] = rhs_value;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(lhs_register as usize, lhs_value);
+        test_registers.set_register(rhs_register as usize, rhs_value);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[lhs_register as usize] = (lhs_value - rhs_value) as u8;
-        expected_registers.r[rhs_register as usize] = rhs_value;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_register(lhs_register as usize, (lhs_value - rhs_value) as u8);
+        expected_registers.set_register(rhs_register as usize, rhs_value);
         expected_registers.pc = 1;
 
         let sbc = SBC::new(
@@ -81,14 +87,14 @@ mod tests {
         let rhs_register = 30;
         let rhs_value = 250;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[lhs_register as usize] = lhs_value;
-        test_registers.r[rhs_register as usize] = rhs_value;
-        test_registers.sreg_c = true;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(lhs_register as usize, lhs_value);
+        test_registers.set_register(rhs_register as usize, rhs_value);
+        test_registers.set_status_register_bit(SregBit::C);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[lhs_register as usize] = (lhs_value - rhs_value - 1) as u8;
-        expected_registers.r[rhs_register as usize] = rhs_value;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_register(lhs_register as usize, (lhs_value - rhs_value - 1) as u8);
+        expected_registers.set_register(rhs_register as usize, rhs_value);
         expected_registers.pc = 1;
 
         let sbc = SBC::new(
@@ -109,16 +115,16 @@ mod tests {
         let rhs_register = 12;
         let rhs_value = 120;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[lhs_register as usize] = lhs_value;
-        test_registers.r[rhs_register as usize] = rhs_value;
-        test_registers.sreg_z = true;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(lhs_register as usize, lhs_value);
+        test_registers.set_register(rhs_register as usize, rhs_value);
+        test_registers.set_status_register_bit(SregBit::Z);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[lhs_register as usize] = lhs_value - rhs_value;
-        expected_registers.r[rhs_register as usize] = rhs_value;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_register(lhs_register as usize, lhs_value - rhs_value);
+        expected_registers.set_register(rhs_register as usize, rhs_value);
         expected_registers.pc = 1;
-        expected_registers.sreg_z = false;
+        expected_registers.clear_status_register_bit(SregBit::Z);
 
         let sbc = SBC::new(
             (0x0400 as u16
@@ -138,13 +144,13 @@ mod tests {
         let rhs_register = 1;
         let rhs_value = 100;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[lhs_register as usize] = lhs_value;
-        test_registers.r[rhs_register as usize] = rhs_value;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(lhs_register as usize, lhs_value);
+        test_registers.set_register(rhs_register as usize, rhs_value);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[lhs_register as usize] = (lhs_value - rhs_value) as u8;
-        expected_registers.r[rhs_register as usize] = rhs_value;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_register(lhs_register as usize, (lhs_value - rhs_value) as u8);
+        expected_registers.set_register(rhs_register as usize, rhs_value);
         expected_registers.pc = 1;
 
         let sbc = SBC::new(
@@ -165,16 +171,16 @@ mod tests {
         let rhs_register = 1;
         let rhs_value = 100;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[lhs_register as usize] = lhs_value;
-        test_registers.r[rhs_register as usize] = rhs_value;
-        test_registers.sreg_z = true;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(lhs_register as usize, lhs_value);
+        test_registers.set_register(rhs_register as usize, rhs_value);
+        test_registers.set_status_register_bit(SregBit::Z);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[lhs_register as usize] = (lhs_value - rhs_value) as u8;
-        expected_registers.r[rhs_register as usize] = rhs_value;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_register(lhs_register as usize, (lhs_value - rhs_value) as u8);
+        expected_registers.set_register(rhs_register as usize, rhs_value);
         expected_registers.pc = 1;
-        expected_registers.sreg_z = true;
+        expected_registers.set_status_register_bit(SregBit::Z);
 
         let sbc = SBC::new(
             (0x0800 as u16
@@ -194,14 +200,14 @@ mod tests {
         let rhs_register = 11;
         let rhs_value = 9;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[lhs_register as usize] = lhs_value;
-        test_registers.r[rhs_register as usize] = rhs_value;
-        test_registers.sreg_c = true;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(lhs_register as usize, lhs_value);
+        test_registers.set_register(rhs_register as usize, rhs_value);
+        test_registers.set_status_register_bit(SregBit::C);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[lhs_register as usize] = lhs_value - rhs_value - 1;
-        expected_registers.r[rhs_register as usize] = rhs_value;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_register(lhs_register as usize, lhs_value - rhs_value - 1);
+        expected_registers.set_register(rhs_register as usize, rhs_value);
         expected_registers.pc = 1;
 
         let sbc = SBC::new(
@@ -222,17 +228,17 @@ mod tests {
         let rhs_register = 11;
         let rhs_value = 9;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[lhs_register as usize] = lhs_value;
-        test_registers.r[rhs_register as usize] = rhs_value;
-        test_registers.sreg_c = true;
-        test_registers.sreg_z = true;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(lhs_register as usize, lhs_value);
+        test_registers.set_register(rhs_register as usize, rhs_value);
+        test_registers.set_status_register_bit(SregBit::C);
+        test_registers.set_status_register_bit(SregBit::Z);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[lhs_register as usize] = lhs_value - rhs_value - 1;
-        expected_registers.r[rhs_register as usize] = rhs_value;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_register(lhs_register as usize, lhs_value - rhs_value - 1);
+        expected_registers.set_register(rhs_register as usize, rhs_value);
         expected_registers.pc = 1;
-        expected_registers.sreg_z = true;
+        expected_registers.set_status_register_bit(SregBit::Z);
 
         let sbc = SBC::new(
             (0x0800 as u16
@@ -252,20 +258,22 @@ mod tests {
         let rhs_register = 16;
         let rhs_value = 127;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[lhs_register as usize] = lhs_value;
-        test_registers.r[rhs_register as usize] = rhs_value;
-        test_registers.sreg_c = true;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(lhs_register as usize, lhs_value);
+        test_registers.set_register(rhs_register as usize, rhs_value);
+        test_registers.set_status_register_bit(SregBit::C);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[lhs_register as usize] =
-            lhs_value.wrapping_sub(rhs_value).wrapping_sub(1);
-        expected_registers.r[rhs_register as usize] = rhs_value;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_register(
+            lhs_register as usize,
+            lhs_value.wrapping_sub(rhs_value).wrapping_sub(1),
+        );
+        expected_registers.set_register(rhs_register as usize, rhs_value);
         expected_registers.pc = 1;
-        expected_registers.sreg_n = true;
-        expected_registers.sreg_h = true;
-        expected_registers.sreg_c = true;
-        expected_registers.sreg_s = true;
+        expected_registers.set_status_register_bit(SregBit::N);
+        expected_registers.set_status_register_bit(SregBit::H);
+        expected_registers.set_status_register_bit(SregBit::C);
+        expected_registers.set_status_register_bit(SregBit::S);
 
         let sbc = SBC::new(
             (0x0800 as u16
@@ -285,18 +293,18 @@ mod tests {
         let rhs_register = 31;
         let rhs_value = 60;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[lhs_register as usize] = lhs_value;
-        test_registers.r[rhs_register as usize] = rhs_value;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(lhs_register as usize, lhs_value);
+        test_registers.set_register(rhs_register as usize, rhs_value);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[lhs_register as usize] = lhs_value.wrapping_sub(rhs_value);
-        expected_registers.r[rhs_register as usize] = rhs_value;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_register(lhs_register as usize, lhs_value.wrapping_sub(rhs_value));
+        expected_registers.set_register(rhs_register as usize, rhs_value);
         expected_registers.pc = 1;
-        expected_registers.sreg_n = true;
-        expected_registers.sreg_h = true;
-        expected_registers.sreg_c = true;
-        expected_registers.sreg_s = true;
+        expected_registers.set_status_register_bit(SregBit::N);
+        expected_registers.set_status_register_bit(SregBit::H);
+        expected_registers.set_status_register_bit(SregBit::C);
+        expected_registers.set_status_register_bit(SregBit::S);
 
         let sbc = SBC::new(
             (0x0800 as u16
@@ -316,20 +324,22 @@ mod tests {
         let rhs_register = 31;
         let rhs_value = 60;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[lhs_register as usize] = lhs_value;
-        test_registers.r[rhs_register as usize] = rhs_value;
-        test_registers.sreg_c = true;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(lhs_register as usize, lhs_value);
+        test_registers.set_register(rhs_register as usize, rhs_value);
+        test_registers.set_status_register_bit(SregBit::C);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[lhs_register as usize] =
-            lhs_value.wrapping_sub(rhs_value).wrapping_sub(1);
-        expected_registers.r[rhs_register as usize] = rhs_value;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_register(
+            lhs_register as usize,
+            lhs_value.wrapping_sub(rhs_value).wrapping_sub(1),
+        );
+        expected_registers.set_register(rhs_register as usize, rhs_value);
         expected_registers.pc = 1;
-        expected_registers.sreg_n = true;
-        expected_registers.sreg_h = true;
-        expected_registers.sreg_c = true;
-        expected_registers.sreg_s = true;
+        expected_registers.set_status_register_bit(SregBit::N);
+        expected_registers.set_status_register_bit(SregBit::H);
+        expected_registers.set_status_register_bit(SregBit::C);
+        expected_registers.set_status_register_bit(SregBit::S);
 
         let sbc = SBC::new(
             (0x0800 as u16

@@ -1,4 +1,4 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct EOR {
     d: u16,
@@ -6,9 +6,13 @@ pub struct EOR {
 }
 
 impl Instruction for EOR {
-    fn process(&self, registers: &mut Registers) {
-        registers.r[self.d as usize] ^= registers.r[self.r as usize];
-        registers.pc += 1;
+    fn process(&self, memory: &mut Memory) {
+        memory.set_register(
+            self.d as usize,
+            memory.get_register(self.d as usize).unwrap()
+                ^ memory.get_register(self.r as usize).unwrap(),
+        );
+        memory.pc += 1;
     }
     fn str(&self) -> String {
         return format!("eor r{}, r{}", self.d, self.r).to_owned();
@@ -37,16 +41,16 @@ impl EOR {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory};
 
     use super::EOR;
 
     #[test]
     fn test_process_same_register() {
-        let mut test_registers = Registers::new();
-        test_registers.r[3] = 15;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(3, 15);
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(100).unwrap();
         expected_registers.pc = 1;
 
         let eor: EOR = EOR::new(0x2433);
@@ -57,10 +61,10 @@ mod tests {
 
     #[test]
     fn test_process_same_register_over_15() {
-        let mut test_registers = Registers::new();
-        test_registers.r[31] = 15;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(31, 15);
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(100).unwrap();
         expected_registers.pc = 1;
 
         let eor: EOR = EOR::new(0x27ff);
@@ -77,14 +81,14 @@ mod tests {
         let r_register_value = 7;
         let d_register_value = 9;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[r_register as usize] = r_register_value;
-        test_registers.r[d_register as usize] = d_register_value;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(r_register as usize, r_register_value);
+        test_registers.set_register(d_register as usize, d_register_value);
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(100).unwrap();
         expected_registers.pc = 1;
-        expected_registers.r[r_register as usize] = r_register_value;
-        expected_registers.r[d_register as usize] = d_register_value ^ r_register_value;
+        expected_registers.set_register(r_register as usize, r_register_value);
+        expected_registers.set_register(d_register as usize, d_register_value ^ r_register_value);
 
         let eor: EOR = EOR::new(0x2400 | d_register << 4 | r_register);
         eor.process(&mut test_registers);

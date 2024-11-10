@@ -1,4 +1,4 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct IN {
     d: u16,
@@ -6,9 +6,9 @@ pub struct IN {
 }
 
 impl Instruction for IN {
-    fn process(&self, registers: &mut Registers) {
-        registers.pc += 1;
-        registers.r[self.d as usize] = registers.io[self.a as usize]
+    fn process(&self, memory: &mut Memory) {
+        memory.pc += 1;
+        memory.set_register(self.d as usize, memory.get_io(self.a as usize).unwrap());
     }
     fn str(&self) -> String {
         return format!("in r{}, {}", self.d, self.a).to_owned();
@@ -33,7 +33,7 @@ impl IN {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory};
 
     use super::IN;
 
@@ -43,12 +43,12 @@ mod tests {
         let io_location: u16 = 13;
         let io_value = 63;
 
-        let mut test_registers = Registers::new();
-        test_registers.io[io_location as usize] = io_value;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_io(io_location as usize, io_value);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.io[io_location as usize] = io_value;
-        expected_registers.r[destnation_register as usize] = io_value;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_io(io_location as usize, io_value);
+        expected_registers.set_register(destnation_register as usize, io_value);
         expected_registers.pc = 1;
 
         let i_in = IN::new(0xb000 | destnation_register << 4 | io_location);

@@ -1,4 +1,4 @@
-use crate::registers::Registers;
+use crate::memory::Memory;
 
 mod andi;
 mod brbs;
@@ -33,7 +33,7 @@ mod st_z;
 mod subi;
 
 pub trait Instruction {
-    fn process(&self, registers: &mut Registers) -> ();
+    fn process(&self, memory: &mut Memory) -> ();
     fn str(&self) -> String;
 
     fn get_instruction_codes() -> Vec<u16>
@@ -170,7 +170,7 @@ mod tests {
     struct MockInstruction {}
 
     impl Instruction for MockInstruction {
-        fn process(&self, _registers: &mut Registers) {}
+        fn process(&self, _registers: &mut Memory) {}
         fn str(&self) -> String {
             return "mock".to_owned();
         }

@@ -4,12 +4,12 @@ use std::sync::{Arc, Mutex};
 use structopt::StructOpt;
 
 use clock::Subscriber;
-use registers::Registers;
+use memory::Memory;
 
 pub mod clock;
 pub mod instruction;
 pub mod instruction_executor;
-pub mod registers;
+pub mod memory;
 pub mod timer;
 
 #[derive(Debug, StructOpt)]
@@ -55,14 +55,14 @@ fn main() {
     }
 
     let hex_dump = bin_file::BinFile::from_file(Path::new(&file_path)).unwrap();
-    let registers = Arc::new(Mutex::new(Registers::new()));
+    let memory = Arc::new(Mutex::new(Memory::new(2000).unwrap()));
 
     let instruction_executor: Arc<Mutex<Box<dyn Subscriber>>> = Arc::new(Mutex::new(Box::new(
-        instruction_executor::InstructionExecutor::new(registers.clone(), hex_dump),
+        instruction_executor::InstructionExecutor::new(memory.clone(), hex_dump),
     )));
 
     let timer: Arc<Mutex<Box<dyn Subscriber>>> =
-        Arc::new(Mutex::new(Box::new(timer::Timer::new(registers.clone()))));
+        Arc::new(Mutex::new(Box::new(timer::Timer::new(memory.clone()))));
 
     let mut clock = clock::Clock::new(opt.frequency as f64);
 

@@ -1,4 +1,4 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct MOV {
     d: u16,
@@ -6,9 +6,12 @@ pub struct MOV {
 }
 
 impl Instruction for MOV {
-    fn process(&self, registers: &mut Registers) {
-        registers.pc += 1;
-        registers.r[self.d as usize] = registers.r[self.r as usize];
+    fn process(&self, memory: &mut Memory) {
+        memory.pc += 1;
+        memory.set_register(
+            self.d as usize,
+            memory.get_register(self.r as usize).unwrap(),
+        );
     }
     fn str(&self) -> String {
         return format!("mov r{}, r{}", self.d, self.r).to_owned();
@@ -32,7 +35,7 @@ impl MOV {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory};
 
     use super::MOV;
 
@@ -42,12 +45,12 @@ mod tests {
         let source_register: u16 = 15;
         let data = 15;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[(source_register) as usize] = data;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register((source_register) as usize, data);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[(source_register) as usize] = data;
-        expected_registers.r[(destination_register) as usize] = data;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_register((source_register) as usize, data);
+        expected_registers.set_register((destination_register) as usize, data);
         expected_registers.pc = 1;
 
         let mov = MOV::new(0xe000 | destination_register << 4 | source_register);

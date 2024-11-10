@@ -1,4 +1,4 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct OUT {
     r: u16,
@@ -6,9 +6,12 @@ pub struct OUT {
 }
 
 impl Instruction for OUT {
-    fn process(&self, registers: &mut Registers) {
-        registers.pc += 1;
-        registers.io[self.a as usize] = registers.r[self.r as usize] as u8
+    fn process(&self, memory: &mut Memory) {
+        memory.pc += 1;
+        memory.set_io(
+            self.a as usize,
+            memory.get_register(self.r as usize).unwrap(),
+        );
     }
     fn str(&self) -> String {
         return format!("out {}, r{}", self.a, self.r).to_owned();
@@ -32,7 +35,7 @@ impl OUT {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory};
 
     use super::OUT;
 
@@ -42,12 +45,12 @@ mod tests {
         let io_location: u16 = 13;
         let source_value = 63;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[source_register as usize] = source_value;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(source_register as usize, source_value);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.io[io_location as usize] = source_value;
-        expected_registers.r[source_register as usize] = source_value;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_io(io_location as usize, source_value);
+        expected_registers.set_register(source_register as usize, source_value);
         expected_registers.pc = 1;
 
         let out = OUT::new(0xb000 | source_register << 4 | io_location);

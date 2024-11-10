@@ -1,4 +1,4 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct STDY {
     q: u16,
@@ -6,10 +6,13 @@ pub struct STDY {
 }
 
 impl Instruction for STDY {
-    fn process(&self, registers: &mut Registers) {
-        registers.pc += 1;
+    fn process(&self, memory: &mut Memory) {
+        memory.pc += 1;
 
-        registers.stack[(registers.y() + self.q) as usize] = registers.r[self.r as usize];
+        memory.set_stack(
+            (memory.get_y_register() + self.q) as usize,
+            memory.get_register(self.r as usize).unwrap(),
+        );
     }
     fn str(&self) -> String {
         return format!("std y+{}, r{}", self.q, self.r).to_owned();
@@ -35,7 +38,7 @@ impl STDY {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory};
 
     use super::STDY;
 
@@ -45,12 +48,12 @@ mod tests {
         let r = 8;
         let data = 50;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[r as usize] = data;
+        let mut test_registers = Memory::new(256).unwrap();
+        test_registers.set_register(r as usize, data);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[r as usize] = data;
-        expected_registers.stack[q as usize] = data as u8;
+        let mut expected_registers = Memory::new(256).unwrap();
+        expected_registers.set_register(r as usize, data);
+        expected_registers.set_stack(q as usize, data as u8);
         expected_registers.pc = 1;
 
         let std = STDY::new(0x8208 | r << 4 | q);

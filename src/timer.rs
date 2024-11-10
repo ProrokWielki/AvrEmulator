@@ -1,11 +1,11 @@
 use std::sync::{Arc, Mutex};
 
 use crate::clock::Subscriber;
-use crate::registers;
+use crate::memory::Memory;
 
 pub struct Timer {
     rising_edge_notified: std::sync::atomic::AtomicBool,
-    registers: Arc<Mutex<registers::Registers>>,
+    memory: Arc<Mutex<Memory>>,
     current_clock: u32,
 }
 
@@ -48,16 +48,16 @@ impl<'a> Subscriber for Timer {
 }
 
 impl Timer {
-    pub fn new(registers: Arc<Mutex<registers::Registers>>) -> Self {
+    pub fn new(memory: Arc<Mutex<Memory>>) -> Self {
         Self {
             rising_edge_notified: std::sync::atomic::AtomicBool::new(false),
-            registers: registers,
+            memory: memory,
             current_clock: 0,
         }
     }
 
     fn get_prescaler(&self) -> u32 {
-        match self.registers.lock().unwrap().io[51] {
+        match self.memory.lock().unwrap().get_io(51).unwrap() {
             1 => 1,
             2 => 8,
             3 => 64,
@@ -67,12 +67,13 @@ impl Timer {
         }
     }
     fn increment_tcnt0(&mut self) -> () {
-        if self.registers.lock().unwrap().io[50] == 255 {
-            self.registers.lock().unwrap().io[50] = 0;
-            let register_value = self.registers.lock().unwrap().io[56];
-            self.registers.lock().unwrap().io[56] = register_value | 1;
+        if self.memory.lock().unwrap().get_io(50).unwrap() == 255 {
+            self.memory.lock().unwrap().set_io(50, 0);
+            let register_value = self.memory.lock().unwrap().get_io(56).unwrap();
+            self.memory.lock().unwrap().set_io(56, register_value | 1);
         } else {
-            self.registers.lock().unwrap().io[50] += 1;
+            let register_value = self.memory.lock().unwrap().get_io(50).unwrap();
+            self.memory.lock().unwrap().set_io(50, register_value + 1);
         }
     }
 }
@@ -83,104 +84,104 @@ mod tests {
 
     #[test]
     fn test_get_prescaler() {
-        let registers = Arc::new(Mutex::new(registers::Registers::new()));
+        let memory = Arc::new(Mutex::new(Memory::new(100).unwrap()));
 
-        let sut = Timer::new(registers.clone());
+        let sut = Timer::new(memory.clone());
 
         assert_eq!(sut.get_prescaler(), 0);
 
-        registers.lock().unwrap().io[51] = 1;
+        memory.lock().unwrap().set_io(51, 1);
         assert_eq!(sut.get_prescaler(), 1);
 
-        registers.lock().unwrap().io[51] = 2;
+        memory.lock().unwrap().set_io(51, 2);
         assert_eq!(sut.get_prescaler(), 8);
 
-        registers.lock().unwrap().io[51] = 3;
+        memory.lock().unwrap().set_io(51, 3);
         assert_eq!(sut.get_prescaler(), 64);
 
-        registers.lock().unwrap().io[51] = 4;
+        memory.lock().unwrap().set_io(51, 4);
         assert_eq!(sut.get_prescaler(), 256);
 
-        registers.lock().unwrap().io[51] = 5;
+        memory.lock().unwrap().set_io(51, 5);
         assert_eq!(sut.get_prescaler(), 1024);
     }
 
     #[test]
     fn test_run_prescaler_0() {
-        let registers = Arc::new(Mutex::new(registers::Registers::new()));
+        let memory = Arc::new(Mutex::new(Memory::new(100).unwrap()));
 
-        let mut sut = Timer::new(registers.clone());
+        let mut sut = Timer::new(memory.clone());
 
         for _ in 0..10 {
             sut.notify_rising_edge();
             sut.run();
         }
 
-        assert_eq!(registers.lock().unwrap().io[50], 0);
-        assert_eq!(registers.lock().unwrap().io[56], 0);
+        assert_eq!(memory.lock().unwrap().get_io(50).unwrap(), 0);
+        assert_eq!(memory.lock().unwrap().get_io(56).unwrap(), 0);
     }
 
     #[test]
     fn test_run_prescaler_1() {
-        let registers = Arc::new(Mutex::new(registers::Registers::new()));
-        registers.lock().unwrap().io[51] = 1;
+        let memory = Arc::new(Mutex::new(Memory::new(100).unwrap()));
+        memory.lock().unwrap().set_io(51, 1);
 
-        let mut sut = Timer::new(registers.clone());
+        let mut sut = Timer::new(memory.clone());
 
         for _ in 0..255 {
             sut.notify_rising_edge();
             sut.run();
         }
 
-        assert_eq!(registers.lock().unwrap().io[50], 255);
-        assert_eq!(registers.lock().unwrap().io[56], 0);
+        assert_eq!(memory.lock().unwrap().get_io(50).unwrap(), 255);
+        assert_eq!(memory.lock().unwrap().get_io(56).unwrap(), 0);
     }
 
     #[test]
     fn test_run_prescaler_8() {
-        let registers = Arc::new(Mutex::new(registers::Registers::new()));
-        registers.lock().unwrap().io[51] = 2;
+        let memory = Arc::new(Mutex::new(Memory::new(100).unwrap()));
+        memory.lock().unwrap().set_io(51, 2);
 
-        let mut sut = Timer::new(registers.clone());
+        let mut sut = Timer::new(memory.clone());
 
         for _ in 0..(255 * 8) {
             sut.notify_rising_edge();
             sut.run();
         }
 
-        assert_eq!(registers.lock().unwrap().io[50], 255);
-        assert_eq!(registers.lock().unwrap().io[56], 0);
+        assert_eq!(memory.lock().unwrap().get_io(50).unwrap(), 255);
+        assert_eq!(memory.lock().unwrap().get_io(56).unwrap(), 0);
     }
 
     #[test]
     fn test_run_prescaler_1_overflow() {
-        let registers = Arc::new(Mutex::new(registers::Registers::new()));
-        registers.lock().unwrap().io[51] = 1;
+        let memory = Arc::new(Mutex::new(Memory::new(100).unwrap()));
+        memory.lock().unwrap().set_io(51, 1);
 
-        let mut sut = Timer::new(registers.clone());
+        let mut sut = Timer::new(memory.clone());
 
         for _ in 0..256 {
             sut.notify_rising_edge();
             sut.run();
         }
 
-        assert_eq!(registers.lock().unwrap().io[50], 0);
-        assert_eq!(registers.lock().unwrap().io[56], 1);
+        assert_eq!(memory.lock().unwrap().get_io(50).unwrap(), 0);
+        assert_eq!(memory.lock().unwrap().get_io(56).unwrap(), 1);
     }
 
     #[test]
     fn test_run_falling_edge() {
-        let registers = Arc::new(Mutex::new(registers::Registers::new()));
-        registers.lock().unwrap().io[51] = 1;
+        let memory = Arc::new(Mutex::new(Memory::new(100).unwrap()));
+        memory.lock().unwrap().set_io(51, 1);
 
-        let mut sut = Timer::new(registers.clone());
+        let mut sut = Timer::new(memory.clone());
 
         for _ in 0..10 {
             sut.notify_falling_edge();
             sut.run();
         }
 
-        assert_eq!(registers.lock().unwrap().io[50], 0);
-        assert_eq!(registers.lock().unwrap().io[56], 0);
+        assert_eq!(memory.lock().unwrap().get_io(50).unwrap(), 0);
+        assert_eq!(memory.lock().unwrap().get_io(56).unwrap(), 0);
     }
 }

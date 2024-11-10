@@ -1,4 +1,4 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct LDDY {
     q: u16,
@@ -6,9 +6,14 @@ pub struct LDDY {
 }
 
 impl Instruction for LDDY {
-    fn process(&self, registers: &mut Registers) {
-        registers.pc += 1;
-        registers.r[self.d as usize] = registers.stack[(registers.y() + self.q) as usize];
+    fn process(&self, memory: &mut Memory) {
+        memory.pc += 1;
+        memory.set_register(
+            self.d as usize,
+            memory
+                .get_stack((memory.get_y_register() + self.q) as usize)
+                .unwrap(),
+        );
     }
     fn str(&self) -> String {
         return format!("ldd r{}, y+{}", self.d, self.q,).to_owned();
@@ -35,7 +40,7 @@ impl LDDY {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory};
 
     use super::LDDY;
 
@@ -45,12 +50,12 @@ mod tests {
         let d = 8;
         let data = 50;
 
-        let mut test_registers = Registers::new();
-        test_registers.stack[q as usize] = data;
+        let mut test_registers = Memory::new(500).unwrap();
+        test_registers.set_stack(q as usize, data);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[d as usize] = data;
-        expected_registers.stack[q as usize] = data as u8;
+        let mut expected_registers = Memory::new(500).unwrap();
+        expected_registers.set_register(d as usize, data);
+        expected_registers.set_stack(q as usize, data as u8);
         expected_registers.pc = 1;
 
         let ldd = LDDY::new(0x8008 | d << 4 | q);

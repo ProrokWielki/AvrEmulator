@@ -1,4 +1,4 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct CP {
     d: u8,
@@ -6,14 +6,17 @@ pub struct CP {
 }
 
 impl Instruction for CP {
-    fn process(&self, registers: &mut Registers) {
-        let result = registers.r[self.d as usize].wrapping_sub(registers.r[self.r as usize]);
+    fn process(&self, memory: &mut Memory) {
+        let result = memory
+            .get_register(self.d as usize)
+            .unwrap()
+            .wrapping_sub(memory.get_register(self.r as usize).unwrap());
 
-        registers.pc += 1;
+        memory.pc += 1;
 
-        registers.update_sreg(
-            registers.r[self.d as usize],
-            registers.r[self.r as usize],
+        memory.update_sreg(
+            memory.get_register(self.d as usize).unwrap(),
+            memory.get_register(self.r as usize).unwrap(),
             result,
         );
     }
@@ -42,7 +45,7 @@ impl CP {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory, memory::SregBit};
 
     use super::CP;
 
@@ -53,13 +56,13 @@ mod tests {
         let rhs_register = 22;
         let rhs_value = 5;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[lhs_register as usize] = lhs_value as u8;
-        test_registers.r[rhs_register as usize] = rhs_value as u8;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(lhs_register as usize, lhs_value as u8);
+        test_registers.set_register(rhs_register as usize, rhs_value as u8);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[lhs_register as usize] = lhs_value as u8;
-        expected_registers.r[rhs_register as usize] = rhs_value as u8;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_register(lhs_register as usize, lhs_value as u8);
+        expected_registers.set_register(rhs_register as usize, rhs_value as u8);
         expected_registers.pc = 1;
 
         let cp = CP::new(
@@ -80,15 +83,15 @@ mod tests {
         let rhs_register = 22;
         let rhs_value = 10;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[lhs_register as usize] = lhs_value as u8;
-        test_registers.r[rhs_register as usize] = rhs_value as u8;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(lhs_register as usize, lhs_value as u8);
+        test_registers.set_register(rhs_register as usize, rhs_value as u8);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[lhs_register as usize] = lhs_value as u8;
-        expected_registers.r[rhs_register as usize] = rhs_value as u8;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_register(lhs_register as usize, lhs_value as u8);
+        expected_registers.set_register(rhs_register as usize, rhs_value as u8);
         expected_registers.pc = 1;
-        expected_registers.sreg_z = true;
+        expected_registers.set_status_register_bit(SregBit::Z);
 
         let cp = CP::new(
             (0x1400 as u16
@@ -108,17 +111,17 @@ mod tests {
         let rhs_register = 22;
         let rhs_value = 20;
 
-        let mut test_registers = Registers::new();
-        test_registers.r[lhs_register as usize] = lhs_value as u8;
-        test_registers.r[rhs_register as usize] = rhs_value as u8;
+        let mut test_registers = Memory::new(100).unwrap();
+        test_registers.set_register(lhs_register as usize, lhs_value as u8);
+        test_registers.set_register(rhs_register as usize, rhs_value as u8);
 
-        let mut expected_registers = Registers::new();
-        expected_registers.r[lhs_register as usize] = lhs_value as u8;
-        expected_registers.r[rhs_register as usize] = rhs_value as u8;
+        let mut expected_registers = Memory::new(100).unwrap();
+        expected_registers.set_register(lhs_register as usize, lhs_value as u8);
+        expected_registers.set_register(rhs_register as usize, rhs_value as u8);
         expected_registers.pc = 1;
-        expected_registers.sreg_c = true;
-        expected_registers.sreg_n = true;
-        expected_registers.sreg_s = true;
+        expected_registers.set_status_register_bit(SregBit::C);
+        expected_registers.set_status_register_bit(SregBit::N);
+        expected_registers.set_status_register_bit(SregBit::S);
 
         let cp = CP::new(
             (0x1400 as u16

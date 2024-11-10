@@ -1,22 +1,22 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory, memory::SregBit};
 
 pub struct BSET {
     s: u8,
 }
 
 impl Instruction for BSET {
-    fn process(&self, registers: &mut Registers) {
-        registers.pc += 1;
+    fn process(&self, memory: &mut Memory) {
+        memory.pc += 1;
 
         match self.s {
-            0 => registers.sreg_c = true,
-            1 => registers.sreg_z = true,
-            2 => registers.sreg_n = true,
-            3 => registers.sreg_v = true,
-            4 => registers.sreg_s = true,
-            5 => registers.sreg_h = true,
-            6 => registers.sreg_t = true,
-            7 => registers.sreg_i = true,
+            0 => memory.set_status_register_bit(SregBit::C),
+            1 => memory.set_status_register_bit(SregBit::Z),
+            2 => memory.set_status_register_bit(SregBit::N),
+            3 => memory.set_status_register_bit(SregBit::V),
+            4 => memory.set_status_register_bit(SregBit::S),
+            5 => memory.set_status_register_bit(SregBit::H),
+            6 => memory.set_status_register_bit(SregBit::T),
+            7 => memory.set_status_register_bit(SregBit::I),
             _ => (),
         }
     }
@@ -42,7 +42,7 @@ impl BSET {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory, memory::SregBit};
 
     use super::BSET;
 
@@ -50,11 +50,11 @@ mod tests {
     fn test_process() {
         let sreg_bit = 5;
 
-        let mut test_registers = Registers::new();
+        let mut test_registers = Memory::new(100).unwrap();
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(100).unwrap();
         expected_registers.pc = 1;
-        expected_registers.sreg_h = true;
+        expected_registers.set_status_register_bit(SregBit::H);
 
         let bset = BSET::new(0x9408 | (sreg_bit << 4) as u16);
         bset.process(&mut test_registers);

@@ -1,14 +1,14 @@
-use crate::{instruction::Instruction, registers::Registers};
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct RCALL {
     k: i32,
 }
 
 impl Instruction for RCALL {
-    fn process(&self, registers: &mut Registers) {
-        registers.stack[registers.sp() as usize] = (registers.pc + 1) as u8;
-        registers.set_sp(registers.sp() - 2);
-        registers.pc += self.k + 1;
+    fn process(&self, memory: &mut Memory) {
+        memory.set_stack(memory.get_sp() as usize, (memory.pc + 1) as u8);
+        memory.set_sp(memory.get_sp() - 2);
+        memory.pc += self.k + 1;
     }
     fn str(&self) -> String {
         return format!("rcall {}", self.k).to_owned();
@@ -31,7 +31,7 @@ impl RCALL {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, registers::Registers};
+    use crate::{instruction::Instruction, memory::Memory};
 
     use super::RCALL;
 
@@ -41,17 +41,17 @@ mod tests {
         let start_sp = 10;
         let expected_sp = start_sp - 2;
 
-        let mut test_registers = Registers::new();
+        let mut test_registers = Memory::new(500).unwrap();
         test_registers.set_sp(start_sp);
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(500).unwrap();
         expected_registers.set_sp(expected_sp);
         expected_registers.pc = k + 1;
 
         let rcall = RCALL::new(0xe000 | k as u16);
         rcall.process(&mut test_registers);
 
-        assert_eq!(test_registers.sp(), expected_registers.sp());
+        assert_eq!(test_registers.get_sp(), expected_registers.get_sp());
         assert_eq!(test_registers.pc, expected_registers.pc);
     }
 
@@ -61,17 +61,17 @@ mod tests {
         let start_sp = 10;
         let expected_sp = start_sp - 2;
 
-        let mut test_registers = Registers::new();
+        let mut test_registers = Memory::new(500).unwrap();
         test_registers.set_sp(start_sp);
 
-        let mut expected_registers = Registers::new();
+        let mut expected_registers = Memory::new(500).unwrap();
         expected_registers.set_sp(expected_sp);
         expected_registers.pc = k + 1;
 
         let rcall = RCALL::new(0xe000 | ((k as i16) & 0x0fff) as u16);
         rcall.process(&mut test_registers);
 
-        assert_eq!(test_registers.sp(), expected_registers.sp());
+        assert_eq!(test_registers.get_sp(), expected_registers.get_sp());
         assert_eq!(test_registers.pc, expected_registers.pc);
     }
 
