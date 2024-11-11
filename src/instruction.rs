@@ -24,6 +24,7 @@ mod pop;
 mod push;
 mod rcall;
 mod ret;
+mod reti;
 mod rjmp;
 mod sbc;
 mod sbci;
@@ -158,6 +159,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if brbs::BRBS::eq(opcode) {
         return Some(Box::new(brbs::BRBS::new(opcode)));
+    }
+    if reti::RETI::eq(opcode) {
+        return Some(Box::new(reti::RETI::new(opcode)));
     }
 
     None
@@ -374,6 +378,11 @@ mod tests {
     #[test]
     fn test_get_instruction_returns_brbs_for_brbs_opcode() {
         assert_eq!(get_instruction(0xf012).unwrap().str(), "brbs 2, 2");
+    }
+
+    #[test]
+    fn test_get_instruction_returns_reti_for_reti_opcode() {
+        assert_eq!(get_instruction(0x9518).unwrap().str(), "reti");
     }
 }
 
