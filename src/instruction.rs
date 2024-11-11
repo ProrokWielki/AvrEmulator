@@ -1,5 +1,6 @@
 use crate::memory::Memory;
 
+mod adc;
 mod add;
 mod andi;
 mod brbs;
@@ -166,6 +167,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if add::ADD::eq(opcode) {
         return Some(Box::new(add::ADD::new(opcode)));
+    }
+    if adc::ADC::eq(opcode) {
+        return Some(Box::new(adc::ADC::new(opcode)));
     }
 
     None
@@ -392,6 +396,11 @@ mod tests {
     #[test]
     fn test_get_instruction_returns_add_for_add_opcode() {
         assert_eq!(get_instruction(0x0c12).unwrap().str(), "add r1, r2");
+    }
+
+    #[test]
+    fn test_get_instruction_returns_adc_for_adc_opcode() {
+        assert_eq!(get_instruction(0x1c12).unwrap().str(), "adc r1, r2");
     }
 }
 
