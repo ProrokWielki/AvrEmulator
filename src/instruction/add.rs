@@ -1,106 +1,89 @@
-use crate::memory::memory::IMemory;
-use crate::memory::memory::Memory;
+use crate::{instruction::Instruction, memory::Memory};
 
 pub struct ADD {
-    destination_register: u16,
-    source_register: u16,
+    d: u8,
+    r: u8,
+}
+
+impl Instruction for ADD {
+    fn process(&self, memory: &mut Memory) {
+        let result = memory
+            .get_register(self.d as usize)
+            .unwrap()
+            .wrapping_add(memory.get_register(self.r as usize).unwrap());
+
+        memory.update_sreg(
+            memory.get_register(self.d as usize).unwrap(),
+            memory.get_register(self.r as usize).unwrap(),
+            result,
+        );
+
+        memory.set_register(self.d as usize, result);
+
+        memory.pc += 1;
+    }
+    fn str(&self) -> String {
+        return format!("add r{}, r{}", self.d, self.r).to_owned();
+    }
+    fn get_instruction_codes() -> Vec<u16> {
+        vec![0b0000_1100_0000_0000]
+    }
+    fn get_instruction_mask() -> u16 {
+        0b1111_1100_0000_0000
+    }
 }
 
 impl ADD {
-    const opcode: u16 = 0b0000110000000000;
-    const opcode_mask: u16 = 0b1111110000000000;
-    pub fn new(instruction: u16) -> Self {
+    pub fn new(opcode: u16) -> Self {
         Self {
-            source_register: ((instruction & (1 << 9)) >> 5) | instruction & (0b1111),
-            destination_register: (instruction & (0b111110000)) >> 4,
+            d: ((opcode & 0x01f0) >> 4) as u8,
+            r: (((opcode & 0x0200) >> 5) | (opcode & 0x000f)) as u8,
         }
-    }
-    pub fn eq(rhs: u16) -> bool {
-        return (rhs & ADD::opcode_mask) == ADD::opcode;
-    }
-    pub fn perform(&self, memory: &mut impl IMemory) {
-        *memory.get(self.destination_register) += *memory.get(self.source_register)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use mockall::*;
+    use crate::{instruction::Instruction, memory::Memory, memory::SregBit};
 
-    mock! {
-        pub Memory{}
-        impl IMemory for Memory
-        {
-            fn get(&mut self, address: u16) -> &mut u16;
-        }
+    use super::ADD;
+
+    #[test]
+    fn test_process() {
+        let d_register = 15;
+        let r_register = 30;
+        let d_value = 50;
+        let r_value = 70;
+
+        let mut test_registers = Memory::new(256).unwrap();
+        test_registers.set_register(d_register as usize, d_value);
+        test_registers.set_register(r_register as usize, r_value);
+
+        let mut expected_registers = Memory::new(256).unwrap();
+        expected_registers.set_register(d_register as usize, d_value + r_value);
+        expected_registers.set_register(r_register as usize, r_value);
+        expected_registers.set_status_register_bit(SregBit::H);
+        expected_registers.pc = 1;
+
+        let add = ADD::new(0x0efe);
+        add.process(&mut test_registers);
+
+        assert_eq!(test_registers, expected_registers);
     }
 
     #[test]
-    fn test_new() {
-        let add = ADD::new(0b0000111010100101);
-        assert_eq!(add.destination_register, 0b01010);
-        assert_eq!(add.source_register, 0b10101);
+    fn tests_get_instraction_codes() {
+        assert_eq!(ADD::get_instruction_codes(), vec![0b0000_1100_0000_0000]);
     }
 
     #[test]
-    fn test_eq() {
-        assert_eq!(ADD::eq(0b0000110000000000), true);
-        assert_eq!(ADD::eq(0b0000010000000000), false);
-        assert_eq!(ADD::eq(0b0000100000000000), false);
-        assert_eq!(ADD::eq(0b0001110000000000), false);
-
-        assert_eq!(ADD::eq(0b0000111111111111), true);
-    }
-
-    #[ignore]
-    #[test]
-    fn test_perform_with_mock() {
-        let mut add = ADD::new(0b0000111010100101);
-        let mut mock_memory = MockMemory::new();
-
-        let mut source_address: u16 = 0b10101;
-        let mut destination_address: u16 = 0b01010;
-
-        let &mut source_value: &mut u16 = &mut 5;
-        let &mut destination_value: &mut u16 = &mut 7;
-
-        mock_memory
-            .expect_get()
-            .times(1)
-            .with(predicate::eq(source_address))
-            .return_var(source_value);
-
-        mock_memory
-            .expect_get()
-            .times(1)
-            .with(predicate::eq(destination_address))
-            .return_var(destination_value);
-
-        add.perform(&mut mock_memory);
-
-        assert_eq!(destination_value, source_value + destination_value);
+    fn tests_get_instraction_mask() {
+        assert_eq!(ADD::get_instruction_mask(), 0b1111_1100_0000_0000);
     }
 
     #[test]
-    fn test_perform() {
-        let mut add = ADD::new(0b0000111010100101);
-        let mut mock_memory = Memory::new(0b01010, 20);
-
-        let mut source_address: u16 = 0b10101;
-        let mut destination_address: u16 = 0b01010;
-
-        let mut source_value: u16 = 5;
-        let mut destination_value: u16 = 7;
-
-        *mock_memory.get(source_address) = source_value;
-        *mock_memory.get(destination_address) = destination_value;
-
-        add.perform(&mut mock_memory);
-
-        assert_eq!(
-            *mock_memory.get(destination_address),
-            destination_value + source_value
-        );
+    fn test_str() {
+        let add = ADD::new(0x0ef0);
+        assert_eq!(add.str(), "add r15, r16");
     }
 }

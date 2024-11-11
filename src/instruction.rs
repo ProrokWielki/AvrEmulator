@@ -1,5 +1,6 @@
 use crate::memory::Memory;
 
+mod add;
 mod andi;
 mod brbs;
 mod breq;
@@ -162,6 +163,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if reti::RETI::eq(opcode) {
         return Some(Box::new(reti::RETI::new(opcode)));
+    }
+    if add::ADD::eq(opcode) {
+        return Some(Box::new(add::ADD::new(opcode)));
     }
 
     None
@@ -383,6 +387,11 @@ mod tests {
     #[test]
     fn test_get_instruction_returns_reti_for_reti_opcode() {
         assert_eq!(get_instruction(0x9518).unwrap().str(), "reti");
+    }
+
+    #[test]
+    fn test_get_instruction_returns_add_for_add_opcode() {
+        assert_eq!(get_instruction(0x0c12).unwrap().str(), "add r1, r2");
     }
 }
 
