@@ -1,4 +1,4 @@
-use crate::{instruction::Instruction, memory::Memory};
+use crate::{instruction::Instruction, memory::Memory, memory::SregBit};
 
 pub struct RETI {}
 
@@ -8,6 +8,8 @@ impl Instruction for RETI {
         memory.pc = (((memory.get_stack((memory.get_sp() - 1) as usize).unwrap() as u16) << 8)
             | (memory.get_stack(memory.get_sp() as usize).unwrap() as u16))
             as i32;
+
+        memory.set_status_register_bit(SregBit::I);
     }
     fn str(&self) -> String {
         return format!("reti").to_owned();
@@ -28,7 +30,7 @@ impl RETI {
 
 #[cfg(test)]
 mod tests {
-    use crate::{instruction::Instruction, memory::Memory};
+    use crate::{instruction::Instruction, memory::Memory, memory::SregBit};
 
     use super::RETI;
 
@@ -46,6 +48,7 @@ mod tests {
         expected_registers.pc = expected_pc;
         expected_registers.set_sp(expected_sp);
         expected_registers.set_stack(expected_sp as usize, expected_pc as u8);
+        expected_registers.set_status_register_bit(SregBit::I);
 
         let reti = RETI::new(0b1001_0101_0001_1000);
         reti.process(&mut test_registers);
