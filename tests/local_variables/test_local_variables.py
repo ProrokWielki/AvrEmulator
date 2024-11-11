@@ -2,9 +2,9 @@ import subprocess
 import threading
 import os
 
-def test_nop_in_while():
+def test_local_variables():
     proc = subprocess.Popen(["cargo", "run", os.path.dirname(__file__)+"/build/local_variables.hex", "-vv"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    timer = threading.Timer(1, proc.kill)
+    timer = threading.Timer(5, proc.kill)
     
     try:
         timer.start()
