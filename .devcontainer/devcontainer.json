@@ -16,7 +16,9 @@
                 "ms-python.python",
                 "github.vscode-github-actions",
                 "xaver.clang-format",
-                "Gruntfuggly.todo-tree"
+                "Gruntfuggly.todo-tree",
+                "1YiB.rust-bundle",
+                "jock.svg"
             ]
         }
     }

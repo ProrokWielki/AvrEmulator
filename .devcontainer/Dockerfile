@@ -27,6 +27,7 @@ RUN apk add                 \
     cmake==~3               \
     git==~2                 \
     perf==~6                \
+    clang-extra-tools==~17  \
     py3-pytest==~8
 
 RUN rustup-init -y
