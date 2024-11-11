@@ -84,3 +84,13 @@ fn test_timer_interrupt() {
     assert!(TestFixture::call_make());
     assert!(TestFixture::run_tests());
 }
+
+#[test]
+#[serial_test::serial]
+fn test_recursive_function() {
+    TestFixture::set_up("recursive_function".to_owned());
+
+    assert!(TestFixture::prepare_cmake());
+    assert!(TestFixture::call_make());
+    assert!(TestFixture::run_tests());
+}
