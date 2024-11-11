@@ -74,3 +74,13 @@ fn test_timer_register_check() {
     assert!(TestFixture::call_make());
     assert!(TestFixture::run_tests());
 }
+
+#[test]
+#[serial_test::serial]
+fn test_timer_interrupt() {
+    TestFixture::set_up("timer_interrupt".to_owned());
+
+    assert!(TestFixture::prepare_cmake());
+    assert!(TestFixture::call_make());
+    assert!(TestFixture::run_tests());
+}
