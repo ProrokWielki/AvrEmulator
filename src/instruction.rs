@@ -376,3 +376,36 @@ mod tests {
         assert_eq!(get_instruction(0xf012).unwrap().str(), "brbs 2, 2");
     }
 }
+
+#[cfg(test)]
+mod integraiton_test {
+    use crate::memory::Memory;
+
+    use super::nop;
+    use super::rcall;
+    use super::ret;
+    use super::Instruction;
+
+    #[test]
+    fn test_ret_after_rcall() {
+        let retunr_pc = 345;
+        let rcall_offset = 400;
+
+        let rcall = rcall::RCALL::new(0xd000 | (rcall_offset as u16));
+        let ret = ret::RET::new(0x9508);
+        let nop = nop::NOP::new(0x0000);
+
+        let mut memory = Memory::new(300).unwrap();
+        memory.pc = retunr_pc;
+        memory.set_sp(50);
+
+        rcall.process(&mut memory);
+        assert_eq!(memory.pc, retunr_pc + rcall_offset + 1);
+
+        nop.process(&mut memory);
+        assert_eq!(memory.pc, retunr_pc + rcall_offset + 1 + 1);
+
+        ret.process(&mut memory);
+        assert_eq!(memory.pc, retunr_pc + 1);
+    }
+}

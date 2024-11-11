@@ -6,7 +6,11 @@ pub struct RCALL {
 
 impl Instruction for RCALL {
     fn process(&self, memory: &mut Memory) {
-        memory.set_stack(memory.get_sp() as usize, (memory.pc + 1) as u8);
+        memory.set_stack(
+            (memory.get_sp() - 1) as usize,
+            (((memory.pc + 1) & 0xff00) >> 8) as u8,
+        );
+        memory.set_stack(memory.get_sp() as usize, ((memory.pc + 1) & 0x00ff) as u8);
         memory.set_sp(memory.get_sp() - 2);
         memory.pc += self.k + 1;
     }

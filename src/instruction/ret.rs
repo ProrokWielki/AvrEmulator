@@ -5,7 +5,9 @@ pub struct RET {}
 impl Instruction for RET {
     fn process(&self, memory: &mut Memory) {
         memory.set_sp(memory.get_sp() + 2);
-        memory.pc = memory.get_stack(memory.get_sp() as usize).unwrap() as i32;
+        memory.pc = (((memory.get_stack((memory.get_sp() - 1) as usize).unwrap() as u16) << 8)
+            | (memory.get_stack(memory.get_sp() as usize).unwrap() as u16))
+            as i32;
     }
     fn str(&self) -> String {
         return format!("ret").to_owned();
