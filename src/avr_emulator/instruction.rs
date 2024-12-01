@@ -35,6 +35,7 @@ mod sbiw;
 mod sbr;
 mod st_z;
 mod std_y;
+mod sub;
 mod subi;
 
 pub trait Instruction {
@@ -178,6 +179,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if lds::LDS::eq(opcode) {
         return Some(Box::new(lds::LDS::new(opcode)));
+    }
+    if sub::SUB::eq(opcode) {
+        return Some(Box::new(sub::SUB::new(opcode)));
     }
 
     None
@@ -421,6 +425,11 @@ mod tests {
         assert_eq!(get_instruction(0x9000).unwrap().str(), "lds r0, 0");
     }
 
+
+    #[test]
+    fn test_get_instruction_returns_sub_for_sub_opcode() {
+        assert_eq!(get_instruction(0x1812).unwrap().str(), "sub r1, r2");
+    }
 }
 
 #[cfg(test)]
