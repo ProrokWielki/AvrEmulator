@@ -12,3 +12,5 @@ serial_test = "3.2"
 strum = "0.26"
 strum_macros = "0.26"
 
+[package.metadata.scripts]
+coverage = "cargo tarpaulin --no-fail-fast --out html"
