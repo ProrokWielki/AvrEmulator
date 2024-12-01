@@ -19,6 +19,7 @@ mod ld_z;
 mod ldd_y;
 mod ldi;
 mod lds;
+mod lpm_z_plus;
 mod mov;
 mod movw;
 mod nop;
@@ -174,6 +175,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if adc::ADC::eq(opcode) {
         return Some(Box::new(adc::ADC::new(opcode)));
+    }
+    if lpm_z_plus::LpmZPlus::eq(opcode) {
+        return Some(Box::new(lpm_z_plus::LpmZPlus::new(opcode)));
     }
     if brbc::BRBC::eq(opcode) {
         return Some(Box::new(brbc::BRBC::new(opcode)));
@@ -417,6 +421,11 @@ mod tests {
     #[test]
     fn test_get_instruction_returns_adc_for_adc_opcode() {
         assert_eq!(get_instruction(0x1c12).unwrap().str(), "adc r1, r2");
+    }
+
+    #[test]
+    fn test_get_instruction_returns_lpm_z_plus_for_lpm_z_plus_opcode() {
+        assert_eq!(get_instruction(0x9005).unwrap().str(), "lpm r0, z+");
     }
 
     #[test]
