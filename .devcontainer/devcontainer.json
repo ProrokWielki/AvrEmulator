@@ -1,7 +1,5 @@
 {
-    "build": {
-        "dockerfile": "Dockerfile"
-    },
+    "image": "pawelwarzecha/avr_emulator",
     "runArgs": [
         "--security-opt", // for tarpaulin
         "seccomp=unconfined" // for tarpaulin
