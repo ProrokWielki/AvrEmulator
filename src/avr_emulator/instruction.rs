@@ -3,6 +3,7 @@ use crate::avr_emulator::memory::Memory;
 mod adc;
 mod add;
 mod andi;
+mod brbc;
 mod brbs;
 mod breq;
 mod brge;
@@ -170,6 +171,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if adc::ADC::eq(opcode) {
         return Some(Box::new(adc::ADC::new(opcode)));
+    }
+    if brbc::BRBC::eq(opcode) {
+        return Some(Box::new(brbc::BRBC::new(opcode)));
     }
 
     None
@@ -401,6 +405,11 @@ mod tests {
     #[test]
     fn test_get_instruction_returns_adc_for_adc_opcode() {
         assert_eq!(get_instruction(0x1c12).unwrap().str(), "adc r1, r2");
+    }
+
+    #[test]
+    fn test_get_instruction_returns_brbc_for_brbc_opcode() {
+        assert_eq!(get_instruction(0xf412).unwrap().str(), "brbc 2, 2");
     }
 }
 
