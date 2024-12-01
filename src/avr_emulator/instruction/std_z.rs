@@ -1,0 +1,80 @@
+use crate::avr_emulator::{instruction::Instruction, memory::Memory};
+
+pub struct STDZ {
+    q: u16,
+    r: u16,
+}
+
+impl Instruction for STDZ {
+    fn process(&self, memory: &mut Memory) {
+        memory.set_pc(memory.get_pc() + 1);
+
+        memory.set_sram(
+            (memory.get_z_register() + self.q) as usize,
+            memory.get_register(self.r as usize).unwrap(),
+        );
+    }
+    fn str(&self) -> String {
+        return format!("std z+{}, r{}", self.q, self.r).to_owned();
+    }
+    fn get_instruction_codes() -> Vec<u16> {
+        vec![0b1000_0010_0000_0000]
+    }
+    fn get_instruction_mask() -> u16 {
+        0b1101_0010_0000_1000
+    }
+}
+
+impl STDZ {
+    pub fn new(opcode: u16) -> Self {
+        Self {
+            r: (opcode & 0b0000_0001_1111_0000) >> 4,
+            q: ((opcode & 0b0010_0000_0000_0000) >> 8)
+                | ((opcode & 0b0000_1100_0000_0000) >> 7)
+                | (opcode & (0b0000_0000_0000_0111)),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::avr_emulator::{instruction::Instruction, memory::Memory};
+
+    use super::STDZ;
+
+    #[test]
+    fn test_process() {
+        let q = 5;
+        let r = 8;
+        let data = 50;
+
+        let mut test_registers = Memory::new(256, vec![]).unwrap();
+        test_registers.set_register(r as usize, data);
+
+        let mut expected_registers = Memory::new(256, vec![]).unwrap();
+        expected_registers.set_register(r as usize, data);
+        expected_registers.set_sram(q as usize, data as u8);
+        expected_registers.set_pc(1);
+
+        let std = STDZ::new(0x8208 | r << 4 | q);
+        std.process(&mut test_registers);
+
+        assert_eq!(test_registers, expected_registers);
+    }
+
+    #[test]
+    fn test_get_instruction_codes() {
+        assert_eq!(STDZ::get_instruction_codes(), vec![0b1000_0010_0000_0000]);
+    }
+
+    #[test]
+    fn test_get_instruction_mask() {
+        assert_eq!(STDZ::get_instruction_mask(), 0b1101_0010_0000_1000);
+    }
+
+    #[test]
+    fn test_str() {
+        let std = STDZ::new(0x8a88);
+        assert_eq!(std.str(), "std z+16, r8");
+    }
+}

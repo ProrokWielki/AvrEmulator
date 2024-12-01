@@ -38,6 +38,7 @@ mod st_x_plus;
 mod st_z;
 mod st_z_plus;
 mod std_y;
+mod std_z;
 mod sts;
 mod sub;
 mod subi;
@@ -80,7 +81,7 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
         return Some(Box::new(nop::NOP::new(opcode)));
     }
     if ret::RET::eq(opcode) {
-        return Some(Box::new(ret::RET::new(opcode)));
+        return Some(Box::new(ret::RET::new(opcode))); 
     }
     if rjmp::RJMP::eq(opcode) {
         return Some(Box::new(rjmp::RJMP::new(opcode)));
@@ -198,6 +199,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if st_z_plus::StZPlus::eq(opcode) {
         return Some(Box::new(st_z_plus::StZPlus::new(opcode)));
+    }
+    if std_z::STDZ::eq(opcode) {
+        return Some(Box::new(std_z::STDZ::new(opcode)));
     }
 
     None
@@ -464,6 +468,11 @@ mod tests {
     #[test]
     fn test_get_instruction_returns_st_z_plus_for_st_z_plus_opcode() {
         assert_eq!(get_instruction(0x9201).unwrap().str(), "st z+, r0");
+    }
+
+    #[test]
+    fn test_get_instruction_returns_std_z_for_std_z_opcode() {
+        assert_eq!(get_instruction(0x8221).unwrap().str(), "std z+1, r2");
     }
 }
 
