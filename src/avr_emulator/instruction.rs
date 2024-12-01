@@ -34,6 +34,7 @@ mod sbc;
 mod sbci;
 mod sbiw;
 mod sbr;
+mod st_x_plus;
 mod st_z;
 mod std_y;
 mod sts;
@@ -178,6 +179,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if lpm_z_plus::LpmZPlus::eq(opcode) {
         return Some(Box::new(lpm_z_plus::LpmZPlus::new(opcode)));
+    }
+    if st_x_plus::StXPlus::eq(opcode) {
+        return Some(Box::new(st_x_plus::StXPlus::new(opcode)));
     }
     if brbc::BRBC::eq(opcode) {
         return Some(Box::new(brbc::BRBC::new(opcode)));
@@ -426,6 +430,11 @@ mod tests {
     #[test]
     fn test_get_instruction_returns_lpm_z_plus_for_lpm_z_plus_opcode() {
         assert_eq!(get_instruction(0x9005).unwrap().str(), "lpm r0, z+");
+    }
+
+    #[test]
+    fn test_get_instruction_returns_st_x_plus_for_st_x_plus_opcode() {
+        assert_eq!(get_instruction(0x920d).unwrap().str(), "st x+, r0");
     }
 
     #[test]
