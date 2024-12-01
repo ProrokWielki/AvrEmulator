@@ -34,6 +34,8 @@ RUN rustup-init -y
 RUN echo "source ~/.cargo/env" >> ~/.zshrc
 
 # for coverage
+RUN ~/.cargo/bin/cargo install cargo-run-script
+# for coverage
 RUN ~/.cargo/bin/cargo install cargo-tarpaulin
 # for profiling
 RUN ~/.cargo/bin/cargo install flamegraph
