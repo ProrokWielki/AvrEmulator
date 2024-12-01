@@ -1,17 +1,9 @@
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::{atomic, Arc};
 
 use structopt::StructOpt;
 
-use clock::Subscriber;
-use memory::Memory;
-
-pub mod clock;
-pub mod instruction;
-pub mod instruction_executor;
-pub mod interrupt_handler;
-pub mod memory;
-pub mod timer;
+mod avr_emulator;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "AVRSimulator", about = "allows running avr hex")]
@@ -41,6 +33,8 @@ fn to_filter_level(verbose: u8) -> log::LevelFilter {
 }
 
 fn main() {
+    let stop_program = Arc::new(atomic::AtomicBool::new(false));
+
     let opt = Opt::from_args();
 
     env_logger::Builder::from_default_env()
@@ -56,40 +50,14 @@ fn main() {
     }
 
     let hex_dump = bin_file::BinFile::from_file(Path::new(&file_path)).unwrap();
-    let memory = Arc::new(Mutex::new(Memory::new(2000).unwrap()));
 
-    let instruction_executor: Arc<Mutex<Box<dyn Subscriber>>> = Arc::new(Mutex::new(Box::new(
-        instruction_executor::InstructionExecutor::new(memory.clone(), hex_dump),
-    )));
+    let avr_emulator =
+        avr_emulator::AVREmulator::new(hex_dump, 1500, opt.frequency, stop_program.clone());
 
-    let timer: Arc<Mutex<Box<dyn Subscriber>>> =
-        Arc::new(Mutex::new(Box::new(timer::Timer::new(memory.clone()))));
+    let mut threads_to_join = avr_emulator.run();
 
-    let interrupt_handler: Arc<Mutex<Box<dyn Subscriber>>> = Arc::new(Mutex::new(Box::new(
-        interrupt_handler::InterruptHandler::new(memory.clone()),
-    )));
-
-    let mut clock = clock::Clock::new(opt.frequency as f64);
-
-    clock.subscribe(instruction_executor.clone());
-    clock.subscribe(timer.clone());
-    clock.subscribe(interrupt_handler.clone());
-
-    let instruction_executor_thread = std::thread::spawn(move || loop {
-        instruction_executor.lock().unwrap().run();
-    });
-    let clock_thread = std::thread::spawn(move || loop {
-        clock.run();
-    });
-    let timer_thread = std::thread::spawn(move || loop {
-        timer.lock().unwrap().run();
-    });
-    let interrupt_handler_thread = std::thread::spawn(move || loop {
-        interrupt_handler.lock().unwrap().run();
-    });
-
-    instruction_executor_thread.join().unwrap();
-    clock_thread.join().unwrap();
-    timer_thread.join().unwrap();
-    interrupt_handler_thread.join().unwrap();
+    while threads_to_join.len() > 0 {
+        let cur_thread = threads_to_join.remove(0);
+        cur_thread.join().unwrap();
+    }
 }
