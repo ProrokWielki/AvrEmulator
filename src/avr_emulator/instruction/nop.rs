@@ -4,7 +4,7 @@ pub struct NOP {}
 
 impl Instruction for NOP {
     fn process(&self, memory: &mut Memory) {
-        memory.pc += 1;
+        memory.set_pc(memory.get_pc() +1);
     }
     fn str(&self) -> String {
         return "nop".to_owned();
@@ -31,10 +31,10 @@ mod tests {
 
     #[test]
     fn test_process() {
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
 
-        let mut expected_registers = Memory::new(100).unwrap();
-        expected_registers.pc = 1;
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
+        expected_registers.set_pc(1);
 
         let nop = NOP::new(0x0000);
         nop.process(&mut test_registers);
@@ -43,12 +43,12 @@ mod tests {
     }
 
     #[test]
-    fn tests_get_instraction_codes() {
+    fn test_get_instruction_codes() {
         assert_eq!(NOP::get_instruction_codes(), vec![0x0000]);
     }
 
     #[test]
-    fn tests_get_instraction_mask() {
+    fn test_get_instruction_mask() {
         assert_eq!(NOP::get_instruction_mask(), 0xffff);
     }
 

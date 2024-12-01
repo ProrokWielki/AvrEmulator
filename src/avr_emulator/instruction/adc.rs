@@ -25,7 +25,7 @@ impl Instruction for ADC {
 
         memory.set_register(self.d as usize, result);
 
-        memory.pc += 1;
+        memory.set_pc(memory.get_pc() + 1);
     }
     fn str(&self) -> String {
         return format!("adc r{}, r{}", self.d, self.r).to_owned();
@@ -60,15 +60,15 @@ mod tests {
         let d_value = 50;
         let r_value = 70;
 
-        let mut test_registers = Memory::new(256).unwrap();
+        let mut test_registers = Memory::new(256, vec![]).unwrap();
         test_registers.set_register(d_register as usize, d_value);
         test_registers.set_register(r_register as usize, r_value);
 
-        let mut expected_registers = Memory::new(256).unwrap();
+        let mut expected_registers = Memory::new(256, vec![]).unwrap();
         expected_registers.set_register(d_register as usize, d_value + r_value);
         expected_registers.set_register(r_register as usize, r_value);
         expected_registers.set_status_register_bit(SregBit::H);
-        expected_registers.pc = 1;
+        expected_registers.set_pc(1);
 
         let add = ADC::new(0x0efe);
         add.process(&mut test_registers);
@@ -83,16 +83,16 @@ mod tests {
         let d_value = 50;
         let r_value = 70;
 
-        let mut test_registers = Memory::new(256).unwrap();
+        let mut test_registers = Memory::new(256, vec![]).unwrap();
         test_registers.set_register(d_register as usize, d_value);
         test_registers.set_register(r_register as usize, r_value);
         test_registers.set_status_register_bit(SregBit::C);
 
-        let mut expected_registers = Memory::new(256).unwrap();
+        let mut expected_registers = Memory::new(256, vec![]).unwrap();
         expected_registers.set_register(d_register as usize, d_value + r_value + 1);
         expected_registers.set_register(r_register as usize, r_value);
         expected_registers.set_status_register_bit(SregBit::H);
-        expected_registers.pc = 1;
+        expected_registers.set_pc(1);
 
         let adc = ADC::new(0x1efe);
         adc.process(&mut test_registers);
@@ -101,12 +101,12 @@ mod tests {
     }
 
     #[test]
-    fn tests_get_instraction_codes() {
+    fn test_get_instruction_codes() {
         assert_eq!(ADC::get_instruction_codes(), vec![0b0001_1100_0000_0000]);
     }
 
     #[test]
-    fn tests_get_instraction_mask() {
+    fn test_get_instruction_mask() {
         assert_eq!(ADC::get_instruction_mask(), 0b1111_1100_0000_0000);
     }
 

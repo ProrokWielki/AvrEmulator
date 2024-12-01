@@ -6,7 +6,7 @@ pub struct BSET {
 
 impl Instruction for BSET {
     fn process(&self, memory: &mut Memory) {
-        memory.pc += 1;
+        memory.set_pc(memory.get_pc() +1);
 
         match self.s {
             0 => memory.set_status_register_bit(SregBit::C),
@@ -50,10 +50,10 @@ mod tests {
     fn test_process() {
         let sreg_bit = 5;
 
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
 
-        let mut expected_registers = Memory::new(100).unwrap();
-        expected_registers.pc = 1;
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
+        expected_registers.set_pc(1);
         expected_registers.set_status_register_bit(SregBit::H);
 
         let bset = BSET::new(0x9408 | (sreg_bit << 4) as u16);
@@ -63,12 +63,12 @@ mod tests {
     }
 
     #[test]
-    fn tests_get_instraction_codes() {
+    fn test_get_instruction_codes() {
         assert_eq!(BSET::get_instruction_codes(), vec![0x9408]);
     }
 
     #[test]
-    fn tests_get_instraction_mask() {
+    fn test_get_instruction_mask() {
         assert_eq!(BSET::get_instruction_mask(), 0xff8f);
     }
 

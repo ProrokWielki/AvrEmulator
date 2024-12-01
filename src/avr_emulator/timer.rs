@@ -84,7 +84,7 @@ mod tests {
 
     #[test]
     fn test_get_prescaler() {
-        let memory = Arc::new(Mutex::new(Memory::new(100).unwrap()));
+        let memory = Arc::new(Mutex::new(Memory::new(100, vec![]).unwrap()));
 
         let sut = Timer::new(memory.clone());
 
@@ -108,7 +108,7 @@ mod tests {
 
     #[test]
     fn test_run_prescaler_0() {
-        let memory = Arc::new(Mutex::new(Memory::new(100).unwrap()));
+        let memory = Arc::new(Mutex::new(Memory::new(100, vec![]).unwrap()));
 
         let mut sut = Timer::new(memory.clone());
 
@@ -123,7 +123,7 @@ mod tests {
 
     #[test]
     fn test_run_prescaler_1() {
-        let memory = Arc::new(Mutex::new(Memory::new(100).unwrap()));
+        let memory = Arc::new(Mutex::new(Memory::new(100, vec![]).unwrap()));
         memory.lock().unwrap().set_io(51, 1);
 
         let mut sut = Timer::new(memory.clone());
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn test_run_prescaler_8() {
-        let memory = Arc::new(Mutex::new(Memory::new(100).unwrap()));
+        let memory = Arc::new(Mutex::new(Memory::new(100, vec![]).unwrap()));
         memory.lock().unwrap().set_io(51, 2);
 
         let mut sut = Timer::new(memory.clone());
@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn test_run_prescaler_1_overflow() {
-        let memory = Arc::new(Mutex::new(Memory::new(100).unwrap()));
+        let memory = Arc::new(Mutex::new(Memory::new(100, vec![]).unwrap()));
         memory.lock().unwrap().set_io(51, 1);
 
         let mut sut = Timer::new(memory.clone());
@@ -171,7 +171,7 @@ mod tests {
 
     #[test]
     fn test_run_falling_edge() {
-        let memory = Arc::new(Mutex::new(Memory::new(100).unwrap()));
+        let memory = Arc::new(Mutex::new(Memory::new(100, vec![]).unwrap()));
         memory.lock().unwrap().set_io(51, 1);
 
         let mut sut = Timer::new(memory.clone());

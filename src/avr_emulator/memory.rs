@@ -1,7 +1,8 @@
 #[derive(Debug, PartialEq, Clone)]
 pub struct Memory {
-    pub sram: Vec<u8>,
-    pub pc: i32,
+    sram: Vec<u8>,
+    pc: u16,
+    flash: Vec<u8>,
 }
 
 pub enum SregBit {
@@ -16,23 +17,41 @@ pub enum SregBit {
 }
 
 impl Memory {
-    const REGISTERS_SIZE: usize = 32;
-    const IO_SIZE: usize = 64;
+    pub const REGISTERS_START: usize = 0;
+    pub const REGISTERS_SIZE: usize = 32;
 
-    const REGISTERS_START: usize = 0;
-    const REGISTERS_END: usize = Self::REGISTERS_START + Self::REGISTERS_SIZE - 1;
-    const IO_START: usize = Self::REGISTERS_END + 1;
-    const IO_END: usize = Self::IO_START + Self::IO_SIZE - 1;
-    const STACK_START: usize = Self::IO_END + 1;
+    pub const IO_START: usize = Self::REGISTERS_START + Self::REGISTERS_SIZE;
+    pub const IO_SIZE: usize = 64;
 
-    pub fn new(size: usize) -> Result<Self, String> {
+    pub const STACK_START: usize = Self::IO_START + Self::IO_SIZE;
+
+    pub fn new(size: usize, flash: Vec<u8>) -> Result<Self, String> {
         if size < Self::STACK_START {
             return Err("Size to small".to_owned());
         }
         Ok(Self {
             sram: vec![0; size],
             pc: 0,
+            flash: flash,
         })
+    }
+
+    pub fn get_pc(&self) -> u16 {
+        self.pc
+    }
+
+    pub fn set_pc(&mut self, new_pc: u16) {
+        self.pc = new_pc;
+    }
+
+    pub fn get_all_registers(&self) -> Vec<u8> {
+        self.sram[Self::REGISTERS_START..Self::REGISTERS_START + Self::REGISTERS_SIZE].to_vec()
+    }
+    pub fn get_all_io(&self) -> Vec<u8> {
+        self.sram[Self::IO_START..Self::IO_START + Self::IO_SIZE].to_vec()
+    }
+    pub fn get_all_stack(&self) -> Vec<u8> {
+        self.sram[Self::STACK_START..].to_vec()
     }
 
     pub fn set_register(&mut self, register: usize, value: u8) {
@@ -77,16 +96,23 @@ impl Memory {
         Ok(self.sram[address + Self::STACK_START])
     }
 
+    pub fn get_flash(&self, address: usize) -> u8 {
+        if address >= self.flash.len() {
+            panic!("Trying to access stack memory out of bounds");
+        }
+        self.flash[address]
+    }
+
     pub fn set_sram(&mut self, address: usize, value: u8) {
         if address >= self.sram.len() {
-            panic!("Trying to access sram memory out of bounds");
+            panic!("Trying to access sram memory out of bounds: {}", address);
         }
         self.sram[address] = value;
     }
 
     pub fn get_sram(&self, address: usize) -> Result<u8, String> {
         if address >= self.sram.len() {
-            return Err("Trying to access io register out of bounds".to_owned());
+            return Err("Trying to access sram memory out of bounds".to_owned());
         }
         Ok(self.sram[address])
     }
@@ -271,7 +297,7 @@ mod tests {
         let lsb: u8 = 0x5a;
         let register = 12;
 
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
         memory.sram[register + 1] = msb;
         memory.sram[register] = lsb;
 
@@ -283,7 +309,7 @@ mod tests {
 
     #[test]
     fn test_get_as_16bit_out_of_bounds() {
-        let memory = Memory::new(100).unwrap();
+        let memory = Memory::new(100, vec![]).unwrap();
 
         assert!(memory.get_as_16bit(101).is_err());
     }
@@ -293,7 +319,7 @@ mod tests {
         let data: u16 = 0xf05a;
         let register = 12;
 
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
         memory.set_as_16bit(register, data);
 
         assert_eq!(memory.sram[register], (data & 0x00ff) as u8);
@@ -303,21 +329,21 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_set_register_out_of_bounds() {
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
 
         memory.set_register(32, 0);
     }
 
     #[test]
     fn test_new_fails_on_too_small_size() {
-        let memory = Memory::new(10);
+        let memory = Memory::new(10, vec![]);
 
         assert!(memory.is_err());
     }
 
     #[test]
     fn test_get_register_fails_on_out_of_bounds_access() {
-        let memory = Memory::new(100).unwrap();
+        let memory = Memory::new(100, vec![]).unwrap();
 
         assert!(memory.get_register(64).is_err());
     }
@@ -327,7 +353,7 @@ mod tests {
         let register = 12;
         let register_value = 17;
 
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
         memory.sram[register] = register_value;
 
         assert_eq!(memory.get_register(register).unwrap(), register_value);
@@ -335,7 +361,7 @@ mod tests {
 
     #[test]
     fn test_get_io_register_fails_on_out_of_bounds_access() {
-        let memory = Memory::new(100).unwrap();
+        let memory = Memory::new(100, vec![]).unwrap();
 
         assert!(memory.get_io(100).is_err());
     }
@@ -345,7 +371,7 @@ mod tests {
         let register = 12;
         let register_value = 17;
 
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
         memory.sram[32 + register] = register_value;
 
         assert_eq!(memory.get_io(register).unwrap(), register_value);
@@ -354,14 +380,14 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_set_io_register_out_of_bounds() {
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
 
         memory.set_io(65, 0);
     }
 
     #[test]
     fn test_get_sram_fails_on_out_of_bounds_access() {
-        let memory = Memory::new(100).unwrap();
+        let memory = Memory::new(100, vec![]).unwrap();
 
         assert!(memory.get_sram(100).is_err());
     }
@@ -371,7 +397,7 @@ mod tests {
         let address = 99;
         let address_value = 17;
 
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
         memory.sram[address] = address_value;
 
         assert_eq!(memory.get_sram(address).unwrap(), address_value);
@@ -380,7 +406,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_set_sram_out_of_bounds() {
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
 
         memory.set_sram(101, 0);
     }
@@ -390,7 +416,7 @@ mod tests {
         let address = 99;
         let value = 50;
 
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
         memory.set_sram(address, value);
 
         assert_eq!(memory.sram[address], value);
@@ -399,14 +425,14 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_set_stack_out_of_bounds() {
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
 
         memory.set_stack(101, 0);
     }
 
     #[test]
     fn test_get_stack_out_of_bounds() {
-        let memory = Memory::new(100).unwrap();
+        let memory = Memory::new(100, vec![]).unwrap();
 
         assert!(memory.get_stack(101).is_err());
     }
@@ -416,7 +442,7 @@ mod tests {
         let lsb: u8 = 0xa5;
         let msb: u8 = 0xfa;
 
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
         memory.set_io(61, lsb);
         memory.set_io(62, msb);
 
@@ -427,7 +453,7 @@ mod tests {
     fn test_set_sp() {
         let new_sp = 0x8f12;
 
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
         memory.set_sp(new_sp);
 
         assert_eq!(memory.get_sp(), new_sp);
@@ -438,7 +464,7 @@ mod tests {
         let lsb: u8 = 0x18;
         let msb: u8 = 0x81;
 
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
         memory.set_register(26, lsb);
         memory.set_register(27, msb);
 
@@ -449,7 +475,7 @@ mod tests {
     fn test_set_x_register() {
         let new_x = 0xf0f0;
 
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
         memory.set_x_register(new_x);
 
         assert_eq!(memory.get_x_register(), new_x);
@@ -460,7 +486,7 @@ mod tests {
         let lsb: u8 = 0x12;
         let msb: u8 = 0x34;
 
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
         memory.sram[28] = lsb;
         memory.sram[29] = msb;
 
@@ -471,7 +497,7 @@ mod tests {
     fn test_set_y_register() {
         let new_y = 0xdead;
 
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
         memory.set_y_register(new_y);
 
         assert_eq!(memory.get_y_register(), new_y);
@@ -482,7 +508,7 @@ mod tests {
         let lsb: u8 = 0x43;
         let msb: u8 = 0x21;
 
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
         memory.sram[30] = lsb;
         memory.sram[31] = msb;
 
@@ -493,7 +519,7 @@ mod tests {
     fn test_set_z_register() {
         let new_z = 0xbeef;
 
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
         memory.set_z_register(new_z);
 
         assert_eq!(memory.get_z_register(), new_z);
@@ -501,7 +527,7 @@ mod tests {
 
     #[test]
     fn test_sreg_update_borrow_from_bit_3() {
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
 
         memory.update_sreg(8, 2, 3);
         assert_eq!(memory.get_status_register_bit(SregBit::H), false);
@@ -518,7 +544,7 @@ mod tests {
 
     #[test]
     fn test_sreg_update_result_zero_no_keep() {
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
 
         memory.update_sreg(1, 2, 3);
         assert_eq!(memory.get_status_register_bit(SregBit::Z), false);
@@ -529,7 +555,7 @@ mod tests {
 
     #[test]
     fn test_sreg_update_result_zero_keep() {
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
 
         memory.set_status_register_bit(SregBit::Z);
         memory.update_sreg_keep_z_if_result_zero(1, 2, 3);
@@ -550,7 +576,7 @@ mod tests {
 
     #[test]
     fn test_sreg_update_carry_bit() {
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
 
         memory.update_sreg(128, 2, 3);
         assert_eq!(memory.get_status_register_bit(SregBit::C), false);
@@ -567,7 +593,7 @@ mod tests {
 
     #[test]
     fn test_sreg_update_n_bit() {
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
 
         memory.update_sreg(0, 0, 127);
         assert_eq!(memory.get_status_register_bit(SregBit::N), false);
@@ -578,7 +604,7 @@ mod tests {
 
     #[test]
     fn test_sreg_update_v_bit() {
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
 
         memory.update_sreg(0, 1, 2);
         assert_eq!(memory.get_status_register_bit(SregBit::V), false);
@@ -592,7 +618,7 @@ mod tests {
 
     #[test]
     fn test_sreg_update_s_bit() {
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
 
         memory.update_sreg(0u8.wrapping_sub(120), 10, 0u8.wrapping_sub(130));
         assert_eq!(memory.get_status_register_bit(SregBit::S), true);
@@ -606,7 +632,7 @@ mod tests {
 
     #[test]
     fn test_sreg_update_16bit_s_bit() {
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
 
         memory.update_sreg_16bit(0u16.wrapping_sub(120), 10, 0u16.wrapping_sub(130));
         assert_eq!(memory.get_status_register_bit(SregBit::S), true);
@@ -617,7 +643,7 @@ mod tests {
 
     #[test]
     fn test_sreg_update_16bit_v_bit() {
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
 
         memory.update_sreg_16bit(0, 0xffff, 0x8000);
         assert_eq!(memory.get_status_register_bit(SregBit::V), true);
@@ -628,7 +654,7 @@ mod tests {
 
     #[test]
     fn test_sreg_update_16bit_n_bit() {
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
 
         memory.update_sreg_16bit(0, 0, 0x8000);
         assert_eq!(memory.get_status_register_bit(SregBit::N), true);
@@ -639,7 +665,7 @@ mod tests {
 
     #[test]
     fn test_sreg_update_16bit_z_bit() {
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
 
         memory.update_sreg_16bit(0xffff, 0xffff, 0);
         assert_eq!(memory.get_status_register_bit(SregBit::Z), true);
@@ -650,7 +676,7 @@ mod tests {
 
     #[test]
     fn test_sreg_update_16bit_c_bit() {
-        let mut memory = Memory::new(100).unwrap();
+        let mut memory = Memory::new(100, vec![]).unwrap();
 
         memory.update_sreg_16bit(0, 0x7000, 0x8000);
         assert_eq!(memory.get_status_register_bit(SregBit::C), true);

@@ -2,12 +2,12 @@ use crate::avr_emulator::{instruction::Instruction, memory::Memory, memory::Sreg
 
 pub struct BRBS {
     s: u8,
-    k: i32,
+    k: i16,
 }
 
 impl Instruction for BRBS {
     fn process(&self, memory: &mut Memory) {
-        memory.pc += 1;
+        memory.set_pc(memory.get_pc() + 1);
 
         let mut bit_set = false;
 
@@ -24,7 +24,7 @@ impl Instruction for BRBS {
         }
 
         if bit_set {
-            memory.pc += self.k;
+            memory.set_pc(memory.get_pc().checked_add_signed(self.k).unwrap());
         }
     }
     fn str(&self) -> String {
@@ -43,7 +43,7 @@ impl BRBS {
     pub fn new(opcode: u16) -> Self {
         Self {
             s: (opcode & 0x0007) as u8,
-            k: Self::extend(((opcode & 0x03f8) >> 3) as i16, 7) as i32,
+            k: Self::extend(((opcode & 0x03f8) >> 3) as i16, 7),
         }
     }
 }
@@ -59,11 +59,11 @@ mod tests {
         let sreg_bit = 5;
         let k = 15;
 
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
         test_registers.set_status_register_bit(SregBit::H);
 
-        let mut expected_registers = Memory::new(100).unwrap();
-        expected_registers.pc = 1 + k;
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
+        expected_registers.set_pc(1 + k);
         expected_registers.set_status_register_bit(SregBit::H);
 
         let brbs = BRBS::new((0xf000 | (k << 3) | (sreg_bit)) as u16);
@@ -73,12 +73,12 @@ mod tests {
     }
 
     #[test]
-    fn tests_get_instruction_codes() {
+    fn test_get_instruction_codes() {
         assert_eq!(BRBS::get_instruction_codes(), vec![0xf000]);
     }
 
     #[test]
-    fn tests_get_instruction_mask() {
+    fn test_get_instruction_mask() {
         assert_eq!(BRBS::get_instruction_mask(), 0xfc00);
     }
 

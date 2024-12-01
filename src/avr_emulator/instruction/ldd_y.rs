@@ -7,11 +7,11 @@ pub struct LDDY {
 
 impl Instruction for LDDY {
     fn process(&self, memory: &mut Memory) {
-        memory.pc += 1;
+        memory.set_pc(memory.get_pc() + 1);
         memory.set_register(
             self.d as usize,
             memory
-                .get_stack((memory.get_y_register() + self.q) as usize)
+                .get_sram((memory.get_y_register() + self.q) as usize)
                 .unwrap(),
         );
     }
@@ -50,13 +50,13 @@ mod tests {
         let d = 8;
         let data = 50;
 
-        let mut test_registers = Memory::new(500).unwrap();
-        test_registers.set_stack(q as usize, data);
+        let mut test_registers = Memory::new(500, vec![]).unwrap();
+        test_registers.set_sram(q as usize, data);
 
-        let mut expected_registers = Memory::new(500).unwrap();
+        let mut expected_registers = Memory::new(500, vec![]).unwrap();
         expected_registers.set_register(d as usize, data);
-        expected_registers.set_stack(q as usize, data as u8);
-        expected_registers.pc = 1;
+        expected_registers.set_sram(q as usize, data as u8);
+        expected_registers.set_pc(1);
 
         let ldd = LDDY::new(0x8008 | d << 4 | q);
         ldd.process(&mut test_registers);
@@ -65,12 +65,12 @@ mod tests {
     }
 
     #[test]
-    fn tests_get_instraction_codes() {
+    fn test_get_instruction_codes() {
         assert_eq!(LDDY::get_instruction_codes(), vec![0b1000_0000_0000_1000]);
     }
 
     #[test]
-    fn tests_get_instraction_mask() {
+    fn test_get_instruction_mask() {
         assert_eq!(LDDY::get_instruction_mask(), 0b1101_0010_0000_1000);
     }
 

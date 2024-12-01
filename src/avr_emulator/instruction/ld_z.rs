@@ -6,7 +6,7 @@ pub struct LDZ {
 
 impl Instruction for LDZ {
     fn process(&self, memory: &mut Memory) {
-        memory.pc += 1;
+        memory.set_pc(memory.get_pc() + 1);
 
         memory.set_register(
             self.d as usize,
@@ -46,12 +46,12 @@ mod tests {
         let z_value = 150;
         let destination_register = 15;
 
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
         test_registers.set_register(z_pointing_address as usize, z_value);
         test_registers.set_z_register(z_pointing_address);
 
-        let mut expected_registers = Memory::new(100).unwrap();
-        expected_registers.pc = 1;
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
+        expected_registers.set_pc(1);
         expected_registers.set_register(z_pointing_address as usize, z_value);
         expected_registers.set_z_register(z_pointing_address);
         expected_registers.set_register(
@@ -73,12 +73,12 @@ mod tests {
         let z_value = 150;
         let destination_register = 15;
 
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
         test_registers.set_sram(z_pointing_address as usize, z_value);
         test_registers.set_z_register(z_pointing_address);
 
-        let mut expected_registers = Memory::new(100).unwrap();
-        expected_registers.pc = 1;
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
+        expected_registers.set_pc(1);
         expected_registers.set_sram(z_pointing_address as usize, z_value);
         expected_registers.set_z_register(z_pointing_address);
         expected_registers.set_register(
@@ -100,12 +100,12 @@ mod tests {
         let z_value = 150;
         let destination_register = 15;
 
-        let mut test_registers = Memory::new(500).unwrap();
+        let mut test_registers = Memory::new(500, vec![]).unwrap();
         test_registers.set_sram(z_pointing_address as usize, z_value);
         test_registers.set_z_register(z_pointing_address);
 
-        let mut expected_registers = Memory::new(500).unwrap();
-        expected_registers.pc = 1;
+        let mut expected_registers = Memory::new(500, vec![]).unwrap();
+        expected_registers.set_pc(1);
         expected_registers.set_sram(z_pointing_address as usize, z_value);
         expected_registers.set_z_register(z_pointing_address);
         expected_registers.set_register(
@@ -122,12 +122,12 @@ mod tests {
     }
 
     #[test]
-    fn tests_get_instraction_codes() {
+    fn test_get_instruction_codes() {
         assert_eq!(LDZ::get_instruction_codes(), vec![0b1000_0000_0000_0000]);
     }
 
     #[test]
-    fn tests_get_instraction_mask() {
+    fn test_get_instruction_mask() {
         assert_eq!(LDZ::get_instruction_mask(), 0xfe0f);
     }
 

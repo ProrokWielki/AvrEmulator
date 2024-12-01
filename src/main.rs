@@ -49,7 +49,10 @@ fn main() {
         file_path = opt.file_name;
     }
 
-    let hex_dump = bin_file::BinFile::from_file(Path::new(&file_path)).unwrap();
+    let hex_dump = bin_file::BinFile::from_file(Path::new(&file_path))
+        .unwrap()
+        .to_bytes(.., None)
+        .unwrap();
 
     let avr_emulator =
         avr_emulator::AVREmulator::new(hex_dump, 1500, opt.frequency, stop_program.clone());

@@ -12,7 +12,7 @@ impl Instruction for EOR {
             memory.get_register(self.d as usize).unwrap()
                 ^ memory.get_register(self.r as usize).unwrap(),
         );
-        memory.pc += 1;
+        memory.set_pc(memory.get_pc() +1);
     }
     fn str(&self) -> String {
         return format!("eor r{}, r{}", self.d, self.r).to_owned();
@@ -47,11 +47,11 @@ mod tests {
 
     #[test]
     fn test_process_same_register() {
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
         test_registers.set_register(3, 15);
 
-        let mut expected_registers = Memory::new(100).unwrap();
-        expected_registers.pc = 1;
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
+        expected_registers.set_pc(1);
 
         let eor: EOR = EOR::new(0x2433);
         eor.process(&mut test_registers);
@@ -61,11 +61,11 @@ mod tests {
 
     #[test]
     fn test_process_same_register_over_15() {
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
         test_registers.set_register(31, 15);
 
-        let mut expected_registers = Memory::new(100).unwrap();
-        expected_registers.pc = 1;
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
+        expected_registers.set_pc(1);
 
         let eor: EOR = EOR::new(0x27ff);
         eor.process(&mut test_registers);
@@ -81,12 +81,12 @@ mod tests {
         let r_register_value = 7;
         let d_register_value = 9;
 
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
         test_registers.set_register(r_register as usize, r_register_value);
         test_registers.set_register(d_register as usize, d_register_value);
 
-        let mut expected_registers = Memory::new(100).unwrap();
-        expected_registers.pc = 1;
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
+        expected_registers.set_pc(1);
         expected_registers.set_register(r_register as usize, r_register_value);
         expected_registers.set_register(d_register as usize, d_register_value ^ r_register_value);
 
@@ -97,12 +97,12 @@ mod tests {
     }
 
     #[test]
-    fn tests_get_instraction_codes() {
+    fn test_get_instruction_codes() {
         assert_eq!(EOR::get_instruction_codes(), vec![0x2400]);
     }
 
     #[test]
-    fn tests_get_instraction_mask() {
+    fn test_get_instruction_mask() {
         assert_eq!(EOR::get_instruction_mask(), 0xfc00);
     }
 

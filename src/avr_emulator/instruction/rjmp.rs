@@ -1,12 +1,12 @@
 use crate::avr_emulator::{instruction::Instruction, memory::Memory};
 
 pub struct RJMP {
-    k: i32,
+    k: i16,
 }
 
 impl Instruction for RJMP {
     fn process(&self, memory: &mut Memory) {
-        memory.pc += 1 + self.k;
+        memory.set_pc(memory.get_pc().checked_add_signed(1 + self.k).unwrap());
     }
     fn str(&self) -> String {
         return format!("rjmp {}", self.k).to_owned();
@@ -22,7 +22,7 @@ impl Instruction for RJMP {
 impl RJMP {
     pub fn new(opcode: u16) -> Self {
         Self {
-            k: (Self::extend((opcode & (!Self::get_instruction_mask())) as i16, 12) as i32),
+            k: (Self::extend((opcode & (!Self::get_instruction_mask())) as i16, 12)),
         }
     }
 }
@@ -35,10 +35,10 @@ mod tests {
 
     #[test]
     fn test_process_positive_k() {
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
 
-        let mut expected_registers = Memory::new(100).unwrap();
-        expected_registers.pc = 2;
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
+        expected_registers.set_pc(2);
 
         let nop = RJMP::new(0xf001);
         nop.process(&mut test_registers);
@@ -48,10 +48,12 @@ mod tests {
 
     #[test]
     fn test_process_negative_k() {
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
+        test_registers.set_pc(100);
 
-        let mut expected_registers = Memory::new(100).unwrap();
-        expected_registers.pc = -1;
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
+        expected_registers.set_pc(100);
+        expected_registers.set_pc(expected_registers.get_pc().checked_sub(1).unwrap());
 
         let nop = RJMP::new(0xcffe);
         nop.process(&mut test_registers);
@@ -60,12 +62,12 @@ mod tests {
     }
 
     #[test]
-    fn tests_get_instraction_codes() {
+    fn test_get_instruction_codes() {
         assert_eq!(RJMP::get_instruction_codes(), vec![0b1100_0000_0000_0000]);
     }
 
     #[test]
-    fn tests_get_instraction_mask() {
+    fn test_get_instruction_mask() {
         assert_eq!(RJMP::get_instruction_mask(), 0xf000);
     }
 

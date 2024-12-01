@@ -12,7 +12,7 @@ impl Instruction for CP {
             .unwrap()
             .wrapping_sub(memory.get_register(self.r as usize).unwrap());
 
-        memory.pc += 1;
+        memory.set_pc(memory.get_pc() +1);
 
         memory.update_sreg(
             memory.get_register(self.d as usize).unwrap(),
@@ -56,14 +56,14 @@ mod tests {
         let rhs_register = 22;
         let rhs_value = 5;
 
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
         test_registers.set_register(lhs_register as usize, lhs_value as u8);
         test_registers.set_register(rhs_register as usize, rhs_value as u8);
 
-        let mut expected_registers = Memory::new(100).unwrap();
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
         expected_registers.set_register(lhs_register as usize, lhs_value as u8);
         expected_registers.set_register(rhs_register as usize, rhs_value as u8);
-        expected_registers.pc = 1;
+        expected_registers.set_pc(1);
 
         let cp = CP::new(
             (0x1400 as u16
@@ -83,14 +83,14 @@ mod tests {
         let rhs_register = 22;
         let rhs_value = 10;
 
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
         test_registers.set_register(lhs_register as usize, lhs_value as u8);
         test_registers.set_register(rhs_register as usize, rhs_value as u8);
 
-        let mut expected_registers = Memory::new(100).unwrap();
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
         expected_registers.set_register(lhs_register as usize, lhs_value as u8);
         expected_registers.set_register(rhs_register as usize, rhs_value as u8);
-        expected_registers.pc = 1;
+        expected_registers.set_pc(1);
         expected_registers.set_status_register_bit(SregBit::Z);
 
         let cp = CP::new(
@@ -111,14 +111,14 @@ mod tests {
         let rhs_register = 22;
         let rhs_value = 20;
 
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
         test_registers.set_register(lhs_register as usize, lhs_value as u8);
         test_registers.set_register(rhs_register as usize, rhs_value as u8);
 
-        let mut expected_registers = Memory::new(100).unwrap();
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
         expected_registers.set_register(lhs_register as usize, lhs_value as u8);
         expected_registers.set_register(rhs_register as usize, rhs_value as u8);
-        expected_registers.pc = 1;
+        expected_registers.set_pc(1);
         expected_registers.set_status_register_bit(SregBit::C);
         expected_registers.set_status_register_bit(SregBit::N);
         expected_registers.set_status_register_bit(SregBit::S);
@@ -135,12 +135,12 @@ mod tests {
     }
 
     #[test]
-    fn tests_get_instruction_codes() {
+    fn test_get_instruction_codes() {
         assert_eq!(CP::get_instruction_codes(), vec![0b0001_0100_0000_0000]);
     }
 
     #[test]
-    fn tests_get_instruction_mask() {
+    fn test_get_instruction_mask() {
         assert_eq!(CP::get_instruction_mask(), 0xfc00);
     }
 

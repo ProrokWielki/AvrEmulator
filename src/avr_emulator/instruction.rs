@@ -14,7 +14,6 @@ mod cpc;
 mod cpi;
 mod eor;
 mod i_in;
-mod i_std_y;
 mod ld_z;
 mod ldd_y;
 mod ldi;
@@ -33,6 +32,7 @@ mod sbci;
 mod sbiw;
 mod sbr;
 mod st_z;
+mod std_y;
 mod subi;
 
 pub trait Instruction {
@@ -96,8 +96,8 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     if rcall::RCALL::eq(opcode) {
         return Some(Box::new(rcall::RCALL::new(opcode)));
     }
-    if i_std_y::STDY::eq(opcode) {
-        return Some(Box::new(i_std_y::STDY::new(opcode)));
+    if std_y::STDY::eq(opcode) {
+        return Some(Box::new(std_y::STDY::new(opcode)));
     }
     if ldd_y::LDDY::eq(opcode) {
         return Some(Box::new(ldd_y::LDDY::new(opcode)));
@@ -415,24 +415,24 @@ mod integraiton_test {
 
     #[test]
     fn test_ret_after_rcall() {
-        let retunr_pc = 345;
+        let return_pc = 345;
         let rcall_offset = 400;
 
         let rcall = rcall::RCALL::new(0xd000 | (rcall_offset as u16));
         let ret = ret::RET::new(0x9508);
         let nop = nop::NOP::new(0x0000);
 
-        let mut memory = Memory::new(300).unwrap();
-        memory.pc = retunr_pc;
+        let mut memory = Memory::new(300, vec![]).unwrap();
+        memory.set_pc(return_pc);
         memory.set_sp(50);
 
         rcall.process(&mut memory);
-        assert_eq!(memory.pc, retunr_pc + rcall_offset + 1);
+        assert_eq!(memory.get_pc(), return_pc + rcall_offset + 1);
 
         nop.process(&mut memory);
-        assert_eq!(memory.pc, retunr_pc + rcall_offset + 1 + 1);
+        assert_eq!(memory.get_pc(), return_pc + rcall_offset + 1 + 1);
 
         ret.process(&mut memory);
-        assert_eq!(memory.pc, retunr_pc + 1);
+        assert_eq!(memory.get_pc(), return_pc + 1);
     }
 }

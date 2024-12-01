@@ -14,7 +14,6 @@ pub mod memory;
 pub mod timer;
 
 pub struct AVREmulator {
-    hex_dump: BinFile,
     memory: Arc<Mutex<Memory>>,
     frequency: i64,
     stop_program: Arc<AtomicBool>,
@@ -22,14 +21,13 @@ pub struct AVREmulator {
 
 impl AVREmulator {
     pub fn new(
-        hex_dump: BinFile,
+        hex_dump: Vec<u8>,
         memory_size: usize,
         frequency: i64,
         stop_program: Arc<AtomicBool>,
     ) -> Self {
         Self {
-            hex_dump: hex_dump,
-            memory: Arc::new(Mutex::new(Memory::new(memory_size).unwrap())),
+            memory: Arc::new(Mutex::new(Memory::new(memory_size, hex_dump).unwrap())),
             frequency: frequency,
             stop_program: stop_program,
         }
@@ -42,10 +40,7 @@ impl AVREmulator {
         let stop_program4 = self.stop_program.clone();
 
         let instruction_executor: Arc<Mutex<Box<dyn Subscriber>>> = Arc::new(Mutex::new(Box::new(
-            instruction_executor::InstructionExecutor::new(
-                self.memory.clone(),
-                self.hex_dump.clone(),
-            ),
+            instruction_executor::InstructionExecutor::new(self.memory.clone()),
         )));
 
         let timer: Arc<Mutex<Box<dyn Subscriber>>> =

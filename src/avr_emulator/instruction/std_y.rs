@@ -7,9 +7,9 @@ pub struct STDY {
 
 impl Instruction for STDY {
     fn process(&self, memory: &mut Memory) {
-        memory.pc += 1;
+        memory.set_pc(memory.get_pc() + 1);
 
-        memory.set_stack(
+        memory.set_sram(
             (memory.get_y_register() + self.q) as usize,
             memory.get_register(self.r as usize).unwrap(),
         );
@@ -48,13 +48,13 @@ mod tests {
         let r = 8;
         let data = 50;
 
-        let mut test_registers = Memory::new(256).unwrap();
+        let mut test_registers = Memory::new(256, vec![]).unwrap();
         test_registers.set_register(r as usize, data);
 
-        let mut expected_registers = Memory::new(256).unwrap();
+        let mut expected_registers = Memory::new(256, vec![]).unwrap();
         expected_registers.set_register(r as usize, data);
-        expected_registers.set_stack(q as usize, data as u8);
-        expected_registers.pc = 1;
+        expected_registers.set_sram(q as usize, data as u8);
+        expected_registers.set_pc(1);
 
         let std = STDY::new(0x8208 | r << 4 | q);
         std.process(&mut test_registers);
@@ -63,12 +63,12 @@ mod tests {
     }
 
     #[test]
-    fn tests_get_instraction_codes() {
+    fn test_get_instruction_codes() {
         assert_eq!(STDY::get_instruction_codes(), vec![0b1000_0010_0000_1000]);
     }
 
     #[test]
-    fn tests_get_instraction_mask() {
+    fn test_get_instruction_mask() {
         assert_eq!(STDY::get_instruction_mask(), 0b1101_0010_0000_1000);
     }
 

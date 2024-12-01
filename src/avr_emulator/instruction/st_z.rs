@@ -6,7 +6,7 @@ pub struct STZ {
 
 impl Instruction for STZ {
     fn process(&self, memory: &mut Memory) {
-        memory.pc += 1;
+        memory.set_pc(memory.get_pc() +1);
         memory.set_sram(
             memory.get_z_register() as usize,
             memory.get_register(self.d as usize).unwrap(),
@@ -45,12 +45,12 @@ mod tests {
         let register_value = 150;
         let source_register = 15;
 
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
         test_registers.set_register(source_register as usize, register_value);
         test_registers.set_z_register(z_pointing_address);
 
-        let mut expected_registers = Memory::new(100).unwrap();
-        expected_registers.pc = 1;
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
+        expected_registers.set_pc(1);
         expected_registers.set_register(z_pointing_address as usize, register_value);
         expected_registers.set_register(source_register as usize, register_value);
         expected_registers.set_z_register(z_pointing_address);
@@ -67,12 +67,12 @@ mod tests {
         let register_value = 150;
         let source_register = 15;
 
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
         test_registers.set_register(source_register as usize, register_value);
         test_registers.set_z_register(z_pointing_address);
 
-        let mut expected_registers = Memory::new(100).unwrap();
-        expected_registers.pc = 1;
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
+        expected_registers.set_pc(1);
         expected_registers.set_io((z_pointing_address - 32) as usize, register_value);
         expected_registers.set_register(source_register as usize, register_value);
         expected_registers.set_z_register(z_pointing_address);
@@ -89,12 +89,12 @@ mod tests {
         let register_value = 150;
         let source_register = 15;
 
-        let mut test_registers = Memory::new(500).unwrap();
+        let mut test_registers = Memory::new(500, vec![]).unwrap();
         test_registers.set_register(source_register as usize, register_value);
         test_registers.set_z_register(z_pointing_address);
 
-        let mut expected_registers = Memory::new(500).unwrap();
-        expected_registers.pc = 1;
+        let mut expected_registers = Memory::new(500, vec![]).unwrap();
+        expected_registers.set_pc(1);
         expected_registers.set_sram((z_pointing_address) as usize, register_value);
         expected_registers.set_register(source_register as usize, register_value);
         expected_registers.set_z_register(z_pointing_address);
@@ -106,12 +106,12 @@ mod tests {
     }
 
     #[test]
-    fn tests_get_instraction_codes() {
+    fn test_get_instruction_codes() {
         assert_eq!(STZ::get_instruction_codes(), vec![0b1000_0010_0000_0000]);
     }
 
     #[test]
-    fn tests_get_instraction_mask() {
+    fn test_get_instruction_mask() {
         assert_eq!(STZ::get_instruction_mask(), 0xfe0f);
     }
 

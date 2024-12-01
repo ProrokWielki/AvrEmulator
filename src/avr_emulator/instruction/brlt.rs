@@ -1,16 +1,16 @@
 use crate::avr_emulator::{instruction::Instruction, memory::Memory, memory::SregBit};
 
 pub struct BRLT {
-    k: i32,
+    k: i16,
 }
 
 impl Instruction for BRLT {
     fn process(&self, memory: &mut Memory) {
-        memory.pc += 1;
+        memory.set_pc(memory.get_pc() + 1);
 
         if memory.get_status_register_bit(SregBit::N) != memory.get_status_register_bit(SregBit::V)
         {
-            memory.pc += self.k;
+            memory.set_pc(memory.get_pc().checked_add_signed(self.k).unwrap());
         }
     }
     fn str(&self) -> String {
@@ -27,7 +27,7 @@ impl Instruction for BRLT {
 impl BRLT {
     pub fn new(opcode: u16) -> Self {
         Self {
-            k: Self::extend(((opcode & 0b0000_0011_1111_1000) >> 3) as i16, 7) as i32,
+            k: Self::extend(((opcode & 0b0000_0011_1111_1000) >> 3) as i16, 7),
         }
     }
 }
@@ -42,14 +42,14 @@ mod tests {
     fn test_process_true() {
         let k = 7;
 
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
         test_registers.set_status_register_bit(SregBit::N);
         test_registers.clear_status_register_bit(SregBit::V);
 
-        let mut expected_registers = Memory::new(100).unwrap();
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
         expected_registers.set_status_register_bit(SregBit::N);
         expected_registers.clear_status_register_bit(SregBit::V);
-        expected_registers.pc = 1 + k;
+        expected_registers.set_pc(1 + k);
 
         let brlt = BRLT::new(0xf004 | (k << 3) as u16);
         brlt.process(&mut test_registers);
@@ -61,14 +61,14 @@ mod tests {
     fn test_process_false() {
         let k = 7;
 
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
         test_registers.set_status_register_bit(SregBit::N);
         test_registers.set_status_register_bit(SregBit::V);
 
-        let mut expected_registers = Memory::new(100).unwrap();
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
         expected_registers.set_status_register_bit(SregBit::N);
         expected_registers.set_status_register_bit(SregBit::V);
-        expected_registers.pc = 1;
+        expected_registers.set_pc(1);
 
         let brlt = BRLT::new(0xf004 | (k << 3) as u16);
         brlt.process(&mut test_registers);
@@ -77,12 +77,12 @@ mod tests {
     }
 
     #[test]
-    fn tests_get_instraction_codes() {
+    fn test_get_instruction_codes() {
         assert_eq!(BRLT::get_instruction_codes(), vec![0b1111_0000_0000_0100]);
     }
 
     #[test]
-    fn tests_get_instraction_mask() {
+    fn test_get_instruction_mask() {
         assert_eq!(BRLT::get_instruction_mask(), 0b1111_1100_0000_0111);
     }
 

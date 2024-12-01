@@ -149,7 +149,7 @@ impl InterruptHandler {
         log::error!("executing {} interrupt", routine_address);
 
         let sp = self.memory.lock().unwrap().get_sp();
-        let pc = self.memory.lock().unwrap().pc;
+        let pc = self.memory.lock().unwrap().get_pc();
 
         self.memory
             .lock()
@@ -163,7 +163,7 @@ impl InterruptHandler {
 
         self.memory.lock().unwrap().set_sp(sp - 2);
 
-        self.memory.lock().unwrap().pc = routine_address as i32;
+        self.memory.lock().unwrap().set_pc(routine_address);
     }
 }
 
@@ -177,12 +177,12 @@ mod tests {
 
     #[test]
     fn test_interrupts_are_disabled_after_interrupt_occurs() {
-        let memory = Arc::new(Mutex::new(Memory::new(200).unwrap()));
+        let memory = Arc::new(Mutex::new(Memory::new(200, vec![]).unwrap()));
         memory.lock().unwrap().set_status_register_bit(SregBit::I);
         memory.lock().unwrap().set_io(57, 1);
         memory.lock().unwrap().set_io(56, 1);
         memory.lock().unwrap().set_sp(50);
-        memory.lock().unwrap().pc = 30;
+        memory.lock().unwrap().set_pc(30);
 
         let mut sut = InterruptHandler::new(memory.clone());
         sut.notify_rising_edge();
@@ -194,7 +194,7 @@ mod tests {
 
     #[test]
     fn test_interrupts_stay_enabled_if_interrupt_does_not_occur() {
-        let memory = Arc::new(Mutex::new(Memory::new(200).unwrap()));
+        let memory = Arc::new(Mutex::new(Memory::new(200, vec![]).unwrap()));
         memory.lock().unwrap().set_status_register_bit(SregBit::I);
 
         let mut sut = InterruptHandler::new(memory.clone());
@@ -206,12 +206,12 @@ mod tests {
 
     #[test]
     fn test_interrupt_routine_is_not_executed_if_interrupts_are_disabled() {
-        let memory = Arc::new(Mutex::new(Memory::new(200).unwrap()));
+        let memory = Arc::new(Mutex::new(Memory::new(200, vec![]).unwrap()));
         memory.lock().unwrap().clear_status_register_bit(SregBit::I);
         memory.lock().unwrap().set_io(57, 1);
         memory.lock().unwrap().set_io(56, 1);
         memory.lock().unwrap().set_sp(50);
-        memory.lock().unwrap().pc = 40;
+        memory.lock().unwrap().set_pc(40);
 
         let mut sut = InterruptHandler::new(memory.clone());
         sut.notify_rising_edge();

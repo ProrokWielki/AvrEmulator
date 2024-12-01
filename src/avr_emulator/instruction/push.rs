@@ -11,7 +11,7 @@ impl Instruction for PUSH {
             memory.get_register(self.r as usize).unwrap(),
         );
         memory.set_sp(memory.get_sp() - 1);
-        memory.pc += 1
+        memory.set_pc(memory.get_pc() +1)
     }
     fn str(&self) -> String {
         return format!("push r{}", self.r).to_owned();
@@ -45,14 +45,14 @@ mod tests {
         let register: u16 = 5;
         let register_value = 15;
 
-        let mut test_registers = Memory::new(500).unwrap();
+        let mut test_registers = Memory::new(500, vec![]).unwrap();
         test_registers.set_sp(start_sp);
         test_registers.set_register(register as usize, register_value);
 
-        let mut expected_registers = Memory::new(500).unwrap();
+        let mut expected_registers = Memory::new(500, vec![]).unwrap();
         expected_registers.set_sp(expected_sp);
         expected_registers.set_stack(start_sp as usize, register_value as u8);
-        expected_registers.pc = 1;
+        expected_registers.set_pc(1);
 
         let push = PUSH::new(PUSH::get_instruction_codes()[0] | register << 4);
         push.process(&mut test_registers);
@@ -61,12 +61,12 @@ mod tests {
     }
 
     #[test]
-    fn tests_get_instraction_codes() {
+    fn test_get_instruction_codes() {
         assert_eq!(PUSH::get_instruction_codes(), vec![0b1001_0010_0000_1111]);
     }
 
     #[test]
-    fn tests_get_instraction_mask() {
+    fn test_get_instruction_mask() {
         assert_eq!(PUSH::get_instruction_mask(), 0b1111_1110_0000_1111);
     }
 

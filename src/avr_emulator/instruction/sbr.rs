@@ -7,7 +7,7 @@ pub struct SBR {
 
 impl Instruction for SBR {
     fn process(&self, memory: &mut Memory) {
-        memory.pc += 1;
+        memory.set_pc(memory.get_pc() +1);
 
         memory.set_register(
             self.d as usize,
@@ -47,11 +47,11 @@ mod tests {
         let destination_register = 20;
         let register_value = 120;
 
-        let mut test_registers = Memory::new(100).unwrap();
+        let mut test_registers = Memory::new(100, vec![]).unwrap();
         test_registers.set_register(destination_register as usize, register_value);
 
-        let mut expected_registers = Memory::new(100).unwrap();
-        expected_registers.pc = 1;
+        let mut expected_registers = Memory::new(100, vec![]).unwrap();
+        expected_registers.set_pc(1);
         expected_registers.set_register(destination_register as usize, register_value | k_value);
 
         let sbr = SBR::new(0x8000 | ((destination_register - 16) << 4) | k_value as u16);
@@ -61,12 +61,12 @@ mod tests {
     }
 
     #[test]
-    fn tests_get_instraction_codes() {
+    fn test_get_instruction_codes() {
         assert_eq!(SBR::get_instruction_codes(), vec![0x6000]);
     }
 
     #[test]
-    fn tests_get_instraction_mask() {
+    fn test_get_instruction_mask() {
         assert_eq!(SBR::get_instruction_mask(), 0xf000);
     }
 
