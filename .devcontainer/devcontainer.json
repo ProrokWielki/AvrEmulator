@@ -16,7 +16,9 @@
                 "xaver.clang-format",
                 "Gruntfuggly.todo-tree",
                 "1YiB.rust-bundle",
-                "jock.svg"
+                "jock.svg",
+                "ms-azuretools.vscode-docker",
+                "fill-labs.dependi"
             ]
         }
     }
