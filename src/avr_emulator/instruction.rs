@@ -18,6 +18,7 @@ mod i_in;
 mod ld_z;
 mod ldd_y;
 mod ldi;
+mod lds;
 mod mov;
 mod movw;
 mod nop;
@@ -174,6 +175,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if brbc::BRBC::eq(opcode) {
         return Some(Box::new(brbc::BRBC::new(opcode)));
+    }
+    if lds::LDS::eq(opcode) {
+        return Some(Box::new(lds::LDS::new(opcode)));
     }
 
     None
@@ -411,6 +415,12 @@ mod tests {
     fn test_get_instruction_returns_brbc_for_brbc_opcode() {
         assert_eq!(get_instruction(0xf412).unwrap().str(), "brbc 2, 2");
     }
+
+    #[test]
+    fn test_get_instruction_returns_lds_for_lds_opcode() {
+        assert_eq!(get_instruction(0x9000).unwrap().str(), "lds r0, 0");
+    }
+
 }
 
 #[cfg(test)]
