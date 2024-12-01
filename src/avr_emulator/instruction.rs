@@ -36,6 +36,7 @@ mod sbiw;
 mod sbr;
 mod st_x_plus;
 mod st_z;
+mod st_z_plus;
 mod std_y;
 mod sts;
 mod sub;
@@ -194,6 +195,9 @@ pub fn get_instruction(opcode: u16) -> Option<Box<dyn Instruction>> {
     }
     if sub::SUB::eq(opcode) {
         return Some(Box::new(sub::SUB::new(opcode)));
+    }
+    if st_z_plus::StZPlus::eq(opcode) {
+        return Some(Box::new(st_z_plus::StZPlus::new(opcode)));
     }
 
     None
@@ -455,6 +459,11 @@ mod tests {
     #[test]
     fn test_get_instruction_returns_sub_for_sub_opcode() {
         assert_eq!(get_instruction(0x1812).unwrap().str(), "sub r1, r2");
+    }
+
+    #[test]
+    fn test_get_instruction_returns_st_z_plus_for_st_z_plus_opcode() {
+        assert_eq!(get_instruction(0x9201).unwrap().str(), "st z+, r0");
     }
 }
 
