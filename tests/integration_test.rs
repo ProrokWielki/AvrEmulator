@@ -94,3 +94,13 @@ fn test_recursive_function() {
     assert!(TestFixture::call_make());
     assert!(TestFixture::run_tests());
 }
+
+#[test]
+#[serial_test::serial]
+fn test_allocation_on_heap() {
+    TestFixture::set_up("allocation_on_heap".to_owned());
+
+    assert!(TestFixture::prepare_cmake());
+    assert!(TestFixture::call_make());
+    assert!(TestFixture::run_tests());
+}
