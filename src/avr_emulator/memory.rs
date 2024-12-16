@@ -438,6 +438,21 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
+    fn test_get_flash_out_of_bounds() {
+        let memory = Memory::new(100, vec![1, 2]).unwrap();
+
+        memory.get_flash(2);
+    }
+
+    #[test]
+    fn test_get_flash() {
+        let memory = Memory::new(100, vec![1, 2]).unwrap();
+
+        assert_eq!(memory.get_flash(1), 2);
+    }
+
+    #[test]
     fn test_get_sp() {
         let lsb: u8 = 0xa5;
         let msb: u8 = 0xfa;
@@ -457,6 +472,27 @@ mod tests {
         memory.set_sp(new_sp);
 
         assert_eq!(memory.get_sp(), new_sp);
+    }
+
+    #[test]
+    fn test_get_all_registers() {
+        let memory = Memory::new(100, vec![]).unwrap();
+
+        assert_eq!(memory.get_all_registers().len(), Memory::REGISTERS_SIZE);
+    }
+
+    #[test]
+    fn test_get_all_io() {
+        let memory = Memory::new(100, vec![]).unwrap();
+
+        assert_eq!(memory.get_all_io().len(), Memory::IO_SIZE);
+    }
+
+    #[test]
+    fn test_get_all_stack() {
+        let memory = Memory::new(100, vec![]).unwrap();
+
+        assert_eq!(memory.get_all_stack().len(), 100 - Memory::STACK_START);
     }
 
     #[test]
